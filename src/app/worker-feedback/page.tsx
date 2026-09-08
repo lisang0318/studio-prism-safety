@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, Suspense } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import {
   MessageSquareWarning,
   CheckCircle2,
@@ -32,8 +33,9 @@ import { useSafety } from '@/context/SafetyContext';
 import { WorkerOpinion, OpinionStatus } from '@/types';
 import SignaturePad from '@/components/common/SignaturePad';
 
-export default function WorkerFeedbackAdminPage() {
-  const { workerOpinions, updateOpinionStatus, resolveWorkerOpinion, deleteWorkerOpinion, serverIp, tunnelUrl } = useSafety();
+function WorkerFeedbackContent() {
+  const searchParams = useSearchParams();
+  const { workerOpinions, updateOpinionStatus, resolveWorkerOpinion, deleteWorkerOpinion, serverIp, tunnelUrl, refreshData } = useSafety();
 
   const [activeTab, setActiveTab] = useState<'qr' | 'list'>('qr');
   const [searchTerm, setSearchTerm] = useState('');
@@ -56,7 +58,11 @@ export default function WorkerFeedbackAdminPage() {
     if (typeof window !== 'undefined') {
       setOrigin(window.location.origin);
     }
-  }, []);
+    const tab = searchParams.get('tab');
+    if (tab === 'list' || tab === 'submissions') {
+      setActiveTab('list');
+    }
+  }, [searchParams]);
 
   const isCloudDomain = typeof window !== 'undefined' && !window.location.hostname.includes('localhost') && !window.location.hostname.includes('127.0.0.1');
   const cloudOrigin = (typeof window !== 'undefined' && isCloudDomain) ? window.location.origin : 'https://studio-prism-safety.onrender.com';
@@ -215,9 +221,11 @@ export default function WorkerFeedbackAdminPage() {
           >
             <FileText className="w-3.5 h-3.5" />
             <span>의견 제출 내역</span>
-            {unresolvedCount > 0 && (
-              <span className="px-1.5 py-0.2 rounded-full text-[10px] font-black bg-rose-100 text-rose-800 border border-rose-200">
-                {unresolvedCount}건 미조치
+            {workerOpinions.length > 0 && (
+              <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
+                unresolvedCount > 0 ? 'bg-rose-100 text-rose-700 border border-rose-200 animate-pulse' : 'bg-slate-100 text-slate-700 border border-slate-200'
+              }`}>
+                {workerOpinions.length}건
               </span>
             )}
           </button>
@@ -228,7 +236,39 @@ export default function WorkerFeedbackAdminPage() {
       {/* TAB 1: QR CODE & PUBLIC RECEPTION LINK VIEW                                */}
       {/* ========================================================================= */}
       {activeTab === 'qr' && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="space-y-4">
+          {/* Top Quick Action Banner */}
+          {workerOpinions.length > 0 && (
+            <div className="bg-white border border-slate-200 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-xs">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-rose-50 text-[#FF4B3E] flex items-center justify-center shrink-0">
+                  <MessageSquareWarning className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="text-sm font-black text-slate-900 flex items-center gap-2">
+                    <span>📱 모바일 QR로 접수된 근로자 제보 총 {workerOpinions.length}건</span>
+                    {unresolvedCount > 0 && (
+                      <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-rose-100 text-rose-700">
+                        {unresolvedCount}건 조치 대기중
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-xs text-slate-600 mt-0.5">
+                    근로자가 제출한 위험 내용, 현장 사진, 자필 서명을 확인하고 안전관리자 승인 조치를 진행할 수 있습니다.
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={() => setActiveTab('list')}
+                className="px-4 py-2 rounded-xl bg-[#FF4B3E] hover:bg-[#FF3823] text-white font-bold text-xs flex items-center gap-1.5 shrink-0 shadow-xs transition"
+              >
+                <span>제보 목록 및 조치하기</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Left Column: QR Code Box */}
           <div className="bg-white border border-slate-200 rounded-3xl p-5 sm:p-8 shadow-sm flex flex-col items-center justify-between text-center space-y-6 text-slate-900">
             <div className="space-y-4 w-full">
@@ -775,5 +815,13 @@ export default function WorkerFeedbackAdminPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function WorkerFeedbackAdminPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-slate-500 font-bold">로딩 중...</div>}>
+      <WorkerFeedbackContent />
+    </Suspense>
   );
 }

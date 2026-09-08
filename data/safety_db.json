@@ -1,6 +1,22 @@
 {
   "workPermits": [],
-  "workerOpinions": [],
+  "workerOpinions": [
+    {
+      "studioName": "탄현 스튜디오 1세트",
+      "workTitle": "런닝맨 세트 설치",
+      "opinionType": "위험요인",
+      "title": "테스트 제보: 통로 바닥 전선 걸림 위험",
+      "content": "무대 뒤편 통로에 고전압 전선이 노출되어 있어 안전 덮개(몰드) 설치가 필요합니다.",
+      "authorName": "홍길동",
+      "authorContact": "010-1234-5678",
+      "photos": [],
+      "workerSignature": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
+      "id": "op-1788845220058",
+      "opinionNumber": "VOICE-20260908-01",
+      "status": "접수",
+      "createdAt": "2026-09-08 05:27"
+    }
+  ],
   "inspections": [],
   "contractors": [],
   "tbmRecords": [],

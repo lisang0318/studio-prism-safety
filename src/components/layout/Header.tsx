@@ -153,7 +153,7 @@ export default function Header({ onOpenMobileMenu }: HeaderProps) {
                 {pendingPermits.map(p => (
                   <Link
                     key={p.id}
-                    href={`/work-permits`}
+                    href="/work-permits?tab=submissions"
                     onClick={() => setShowNotifications(false)}
                     className="block p-2.5 rounded-xl bg-amber-50 border border-amber-300 hover:bg-amber-100 transition"
                   >
@@ -169,7 +169,7 @@ export default function Header({ onOpenMobileMenu }: HeaderProps) {
                 {unresolvedOpinions.map(o => (
                   <Link
                     key={o.id}
-                    href={`/worker-feedback`}
+                    href="/worker-feedback?tab=list"
                     onClick={() => setShowNotifications(false)}
                     className="block p-2.5 rounded-xl bg-[#FF4B3E]/10 border border-[#FF4B3E]/30 hover:bg-[#FF4B3E]/20 transition"
                   >

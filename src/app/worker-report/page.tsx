@@ -48,18 +48,56 @@ function WorkerReportContent() {
     if (w) setWorkTitle(decodeURIComponent(w));
   }, [searchParams]);
 
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const compressImage = (file: File): Promise<string> => {
+    return new Promise((resolve) => {
       const reader = new FileReader();
-      reader.onload = () => {
-        setPhotoPreview(reader.result as string);
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+          const maxDim = 1200;
+          if (width > maxDim || height > maxDim) {
+            if (width > height) {
+              height = Math.round((height * maxDim) / width);
+              width = maxDim;
+            } else {
+              width = Math.round((width * maxDim) / height);
+              height = maxDim;
+            }
+          }
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(img, 0, 0, width, height);
+            resolve(canvas.toDataURL('image/jpeg', 0.82));
+          } else {
+            resolve(reader.result as string);
+          }
+        };
+        img.src = e.target?.result as string;
       };
       reader.readAsDataURL(file);
+    });
+  };
+
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      try {
+        const compressed = await compressImage(file);
+        setPhotoPreview(compressed);
+      } catch (err) {
+        console.error('Photo compression error:', err);
+      }
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title || !content || !studioName || !authorName.trim() || !authorContact.trim()) {
       alert('필수 입력 항목(현장 장소, 제보 제목, 상세 내용, 제보자 성명, 연락처)을 모두 입력해 주세요.');
@@ -70,20 +108,28 @@ function WorkerReportContent() {
       return;
     }
 
-    const newOp = addWorkerOpinion({
-      studioName,
-      workTitle: workTitle || '예능 제작현장',
-      opinionType,
-      title,
-      content,
-      authorName: authorName.trim(),
-      authorContact: authorContact.trim(),
-      photos: photoPreview ? [photoPreview] : [],
-      workerSignature: workerSignature || undefined
-    });
+    setIsSubmitting(true);
+    try {
+      const newOp = await addWorkerOpinion({
+        studioName,
+        workTitle: workTitle || '예능 제작현장',
+        opinionType,
+        title,
+        content,
+        authorName: authorName.trim(),
+        authorContact: authorContact.trim(),
+        photos: photoPreview ? [photoPreview] : [],
+        workerSignature: workerSignature || undefined
+      });
 
-    setSubmittedNumber(newOp.opinionNumber);
-    setIsSubmitted(true);
+      setSubmittedNumber(newOp?.opinionNumber || 'VOICE-접수완료');
+      setIsSubmitted(true);
+    } catch (err) {
+      console.error('Submission error:', err);
+      alert('제보 전송 중 오류가 발생했습니다. 다시 시도해 주세요.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // =========================================================================

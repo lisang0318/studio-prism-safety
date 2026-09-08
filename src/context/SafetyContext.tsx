@@ -408,7 +408,7 @@ export function SafetyProvider({ children }: { children: React.ReactNode }) {
   };
 
   // Worker Opinion Actions
-  const addWorkerOpinion = (opinionData: Omit<WorkerOpinion, 'id' | 'opinionNumber' | 'createdAt' | 'status'>) => {
+  const addWorkerOpinion = async (opinionData: Omit<WorkerOpinion, 'id' | 'opinionNumber' | 'createdAt' | 'status'>) => {
     const todayStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
     const seq = String(workerOpinions.length + 1).padStart(2, '0');
     const newOpinion: WorkerOpinion = {
@@ -421,11 +421,16 @@ export function SafetyProvider({ children }: { children: React.ReactNode }) {
 
     setWorkerOpinions(prev => [newOpinion, ...prev]);
 
-    fetch('/api/safety-data', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'add_opinion', payload: opinionData })
-    }).catch(e => console.error('Add opinion API error:', e));
+    try {
+      await fetch('/api/safety-data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'add_opinion', payload: opinionData })
+      });
+      await refreshData();
+    } catch (e) {
+      console.error('Add opinion API error:', e);
+    }
 
     return newOpinion;
   };
