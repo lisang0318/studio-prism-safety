@@ -280,17 +280,17 @@ function WorkPermitsContent() {
   const getStatusBadge = (status: PermitStatus) => {
     switch (status) {
       case '승인완료':
-        return <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-700 border border-emerald-500/30">승인완료</span>;
+        return <span className="inline-flex items-center justify-center whitespace-nowrap px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-300">승인완료</span>;
       case '작업진행중':
-        return <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-[#FF4B3E]/150/20 text-blue-700 border border-[#FF4B3E]/30 animate-pulse">작업진행중</span>;
+        return <span className="inline-flex items-center justify-center whitespace-nowrap px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-300 animate-pulse">작업진행중</span>;
       case '승인대기':
-        return <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-500/20 text-amber-700 border border-amber-500/30">승인대기</span>;
+        return <span className="inline-flex items-center justify-center whitespace-nowrap px-3 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-300">승인대기</span>;
       case '작업완료':
-        return <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-slate-700 text-slate-700">작업완료</span>;
+        return <span className="inline-flex items-center justify-center whitespace-nowrap px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-700 border border-slate-300">작업완료</span>;
       case '반려':
-        return <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-rose-500/20 text-rose-700 border border-rose-500/30">반려됨</span>;
+        return <span className="inline-flex items-center justify-center whitespace-nowrap px-3 py-1 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-300">반려됨</span>;
       default:
-        return <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-800">{status}</span>;
+        return <span className="inline-flex items-center justify-center whitespace-nowrap px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-800 border border-slate-300">{status}</span>;
     }
   };
 
@@ -631,63 +631,63 @@ function WorkPermitsContent() {
           {/* Table */}
           <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs text-slate-700 min-w-[760px]">
-                <thead className="bg-slate-50 text-slate-800 font-bold border-b border-slate-200 uppercase tracking-wider">
+              <table className="w-full text-left text-xs text-slate-700 min-w-[1080px]">
+                <thead className="bg-slate-50 text-slate-800 font-bold border-b border-slate-200 uppercase tracking-wider text-[11px]">
                   <tr>
-                    <th className="px-5 py-4">작업 종류</th>
-                    <th className="px-5 py-4">작업 및 촬영 일시</th>
-                    <th className="px-5 py-4">작업명 / 업체명</th>
-                    <th className="px-5 py-4">작업책임자 (자필서명)</th>
-                    <th className="px-5 py-4">제출 일시</th>
-                    <th className="px-5 py-4 text-center">상태</th>
-                    <th className="px-5 py-4 text-right">관리·승인</th>
+                    <th className="px-4 py-3.5 whitespace-nowrap min-w-[150px]">작업 종류</th>
+                    <th className="px-4 py-3.5 whitespace-nowrap min-w-[140px]">작업 및 촬영 일시</th>
+                    <th className="px-4 py-3.5 min-w-[260px]">작업명 / 업체명</th>
+                    <th className="px-4 py-3.5 whitespace-nowrap min-w-[140px]">작업책임자 (자필서명)</th>
+                    <th className="px-4 py-3.5 whitespace-nowrap min-w-[120px]">제출 일시</th>
+                    <th className="px-4 py-3.5 whitespace-nowrap text-center min-w-[100px]">상태</th>
+                    <th className="px-4 py-3.5 whitespace-nowrap text-right min-w-[140px]">관리·승인</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100/60 font-medium">
+                <tbody className="divide-y divide-slate-100 font-medium">
                   {filteredPermits.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="px-5 py-16 text-center text-slate-800 font-bold">
-                        기록이 없습니다.
+                      <td colSpan={7} className="px-5 py-16 text-center text-slate-500 font-bold">
+                        등록된 작업허가서 내역이 없습니다.
                       </td>
                     </tr>
                   ) : (
                     filteredPermits.map(permit => (
-                      <tr key={permit.id} className="hover:bg-slate-100/50 transition group">
-                        <td className="px-5 py-4">
-                          <span className={`px-2.5 py-1 rounded-lg text-xs font-bold ${
-                            permit.riskLevel === '고위험' ? 'bg-rose-500/20 text-rose-700 border border-rose-500/30' :
-                            permit.riskLevel === '중위험' ? 'bg-amber-500/20 text-amber-700 border border-amber-500/30' :
-                            'bg-[#FF4B3E]/150/20 text-blue-700 border border-[#FF4B3E]/30'
+                      <tr key={permit.id} className="hover:bg-slate-50/80 transition group">
+                        <td className="px-4 py-3.5">
+                          <span className={`inline-block max-w-[180px] px-2.5 py-1 rounded-lg text-xs font-bold break-keep leading-snug ${
+                            permit.riskLevel === '고위험' ? 'bg-rose-50 text-rose-700 border border-rose-200' :
+                            permit.riskLevel === '중위험' ? 'bg-amber-50 text-amber-700 border border-amber-200' :
+                            'bg-blue-50 text-blue-700 border border-blue-200'
                           }`}>
                             {permit.workType}
                           </span>
                         </td>
-                        <td className="px-5 py-4 font-mono text-[11px]">
-                          <div className="font-bold text-slate-900">{permit.startDate.slice(0, 16)}</div>
-                          <div className="text-slate-800">~ {permit.endDate.slice(11, 16)}</div>
+                        <td className="px-4 py-3.5 font-mono text-[11px] whitespace-nowrap">
+                          <div className="font-bold text-slate-900">{permit.startDate ? permit.startDate.slice(0, 16) : '-'}</div>
+                          <div className="text-slate-500">~ {permit.endDate ? permit.endDate.slice(11, 16) : '-'}</div>
                         </td>
-                        <td className="px-5 py-4">
-                          <div className="font-bold text-slate-900 text-sm group-hover:text-blue-700 transition">{permit.title}</div>
-                          <div className="text-slate-800 text-xs mt-0.5">{permit.studioName} · {permit.contractorName} ({permit.workerCount}명)</div>
+                        <td className="px-4 py-3.5">
+                          <div className="font-bold text-slate-900 text-sm group-hover:text-[#FF4B3E] transition break-keep">{permit.title}</div>
+                          <div className="text-slate-500 text-xs mt-0.5 break-keep">{permit.studioName} · {permit.contractorName} ({permit.workerCount}명)</div>
                         </td>
-                        <td className="px-5 py-4">
-                          <div className="font-bold text-slate-800">{permit.managerName}</div>
-                          <div className="text-slate-800 text-[11px] font-mono">{permit.managerContact}</div>
+                        <td className="px-4 py-3.5 whitespace-nowrap">
+                          <div className="font-bold text-slate-900">{permit.managerName}</div>
+                          <div className="text-slate-500 text-[11px] font-mono">{permit.managerContact}</div>
                           {permit.managerSignature && (
-                            <span className="text-[10px] text-emerald-700 font-bold">● 자필 서약 완료</span>
+                            <span className="text-[10px] text-emerald-600 font-bold block mt-0.5">● 자필 서약 완료</span>
                           )}
                         </td>
-                        <td className="px-5 py-4 text-slate-800 font-mono text-[11px]">
+                        <td className="px-4 py-3.5 text-slate-600 font-mono text-[11px] whitespace-nowrap">
                           {permit.createdAt}
                         </td>
-                        <td className="px-5 py-4 text-center">
+                        <td className="px-4 py-3.5 text-center whitespace-nowrap">
                           {getStatusBadge(permit.status)}
                         </td>
-                        <td className="px-5 py-4 text-right">
+                        <td className="px-4 py-3.5 text-right whitespace-nowrap">
                           <div className="flex items-center justify-end gap-1.5">
                             <button
                               onClick={() => setSelectedPermitForPdf(permit)}
-                              className="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-700 text-sky-400 hover:text-slate-900 border border-slate-200 font-bold text-xs flex items-center gap-1 transition"
+                              className="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 font-bold text-xs flex items-center gap-1 transition"
                               title="PDF 정식 서류 미리보기"
                             >
                               <FileText className="w-3.5 h-3.5" />
@@ -695,7 +695,7 @@ function WorkPermitsContent() {
                             </button>
                             <Link
                               href={`/work-permits/${permit.id}`}
-                              className="px-3 py-1.5 rounded-lg bg-[#FF4B3E] hover:bg-[#FF3823] text-white font-black text-xs flex items-center gap-1 shadow-md transition"
+                              className="px-3 py-1.5 rounded-lg bg-[#FF4B3E] hover:bg-[#FF3823] text-white font-black text-xs flex items-center gap-1 shadow-xs transition"
                             >
                               <Eye className="w-3.5 h-3.5" />
                               <span>{permit.status === '승인대기' ? '자필 승인하기' : '상세·QR'}</span>
@@ -706,7 +706,7 @@ function WorkPermitsContent() {
                                   deleteWorkPermit(permit.id);
                                 }
                               }}
-                              className="p-1.5 text-slate-800 hover:text-rose-700 transition"
+                              className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition"
                               title="삭제"
                             >
                               <Trash2 className="w-4 h-4" />
