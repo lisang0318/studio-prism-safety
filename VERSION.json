@@ -1,0 +1,26 @@
+{
+  "version": "3.0.0",
+  "snapshotName": "V3_FINAL_RELEASE",
+  "savedAt": "2026-08-25T17:49:30+09:00",
+  "snapshotDirectory": "C:\\안전관리_V3_SNAPSHOT",
+  "status": "Final Production Release Verified",
+  "changelog": {
+    "v3_features": [
+      "V3 Final Signature Design: Clean Pearl White & Cobalt Shell with High-Contrast Dark Cards",
+      "Exact Studio Prism Sidebar (P Logo, 제작안전 통합허브, SAFETY DOCS, TBM AI음성 배지, 작업허가서 활성화)",
+      "Mobile Public QR Pages (작업허가서 신청 & 근로자 제보) Bright Clean White Theme applied",
+      "Mobile Work Permit Application Weather & Temperature Integration (맑음/흐림/비/눈/강풍 + 기온)",
+      "Official A4 Document & Detailed Permit View with Live Weather & Temperature Data",
+      "Centered Emergency Contacts Modal with 3 Direct Lines (이상욱 책임자 010-6670-3534, 119, 112)",
+      "Safety Log Clean State (Zero auto-filling mock data, full persistent CRUD)",
+      "Dynamic Program Matrix & QR Code Auto-linking without Pre-filled Placeholders",
+      "Dynamic Calendar Year/Month Controls & TBM Direct Location/Leader Form",
+      "Cloudflare Tunnel Public Mobile Access & Local Network Dual Serving"
+    ]
+  },
+  "safetyOfficer": {
+    "company": "스튜디오프리즘(Studio Prism) 제작사업부문",
+    "name": "이상욱 안전관리 책임자",
+    "contact": "010-6670-3534"
+  }
+}

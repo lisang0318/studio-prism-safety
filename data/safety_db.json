@@ -1,0 +1,843 @@
+{
+  "workPermits": [],
+  "workerOpinions": [],
+  "inspections": [],
+  "contractors": [],
+  "tbmRecords": [],
+  "incidents": [],
+  "templates": [
+    {
+      "id": "t-1",
+      "title": "(골 때리는 그녀들) 경기장 스포츠 촬영",
+      "workType": "스포츠·경기장 특수 세트",
+      "riskLevel": "중위험",
+      "description": "야외 축구장/경기장 그라운드 세트 설치, 조명 타워 배치, 잔디 보호재 깔기 및 선수 충돌 방지 대책",
+      "hazards": [
+        "폭염/한파로 인한 온열·한냉 질환 발생",
+        "선수 및 출연진 격렬한 운동/경기 중 충돌"
+      ],
+      "safetyMeasures": [
+        "경기장 잔디 보호재 및 펜스 충격완화 안전매트",
+        "냉각/온열 설비 상시 비치",
+        "응급구조사 및 전담 구급차 현장 상시 대기"
+      ],
+      "requiredPPE": [
+        "스포츠 안전보호대",
+        "무전기"
+      ]
+    },
+    {
+      "id": "t-2",
+      "title": "(런닝맨/틈만나면/비서진)도심·야외 로케이션 및 미션",
+      "workType": "도심·야외 로케이션 미션작업",
+      "riskLevel": "중위험",
+      "description": "도심 및 야외 로케이션 이동 촬영, 야외 미션용 임시 구조물 설치 및 해체",
+      "hazards": [
+        "차량 통행 지역 촬영 시 교통 안전사고 위험",
+        "군중 밀집에 따른 통제선 붕괴 및 압사/전도 사고",
+        "중량물 운반 시 근골격계질환 유발"
+      ],
+      "safetyMeasures": [
+        "관할 경찰서/지자체 도로점용 허가 및 모범운전자 교통 통제선 구축",
+        "군중 밀집 구역 펜스 설치 및 전담 안전요원 배치",
+        "현장 안전관리자 사전 동선 리허설 실시"
+      ],
+      "requiredPPE": [
+        "무전기",
+        "호루라기",
+        "야광조끼"
+      ]
+    },
+    {
+      "id": "t-3",
+      "title": "(우리들의 발라드 / 인기가요) 무대 세트 촬영",
+      "workType": "관객 참여 촬영을 위한 무대 세트 설치·조명/트러스 리깅 작업",
+      "riskLevel": "고위험",
+      "description": "스튜디오 내 관객 참여 촬영을 위한 무대 세트 및 구조물 설치·철거, 트러스 및 조명·음향 장비 리깅 작업",
+      "hazards": [
+        "무대 및 세트 설치·해체 과정에서 구조물 전도·붕괴 및 자재 낙하 위험",
+        "무대 상부 및 트러스 등 고소부 작업 중 작업자 추락 위험",
+        "촬영 중 출연자 및 관계자가 무대 위에서 이동·동작하는 과정에서 무대 가장자리 및 단차부로 추락할 위험",
+        "트러스·조명·음향장비 등 중량물 인양 및 설치 과정에서 장비 낙하·충돌 위험",
+        "조명·음향장비 및 전기설비 설치 과정에서 감전 및 케이블에 의한 걸림·전도 위험",
+        "관객 입·퇴장 및 촬영 중 작업자·출연자·관객 간 동선 혼재에 따른 충돌·전도 위험"
+      ],
+      "safetyMeasures": [
+        "무대 가장자리 및 단차부에 추락방지시설 설치 또는 안전표지 및 접근통제 조치 실시",
+        "촬영 전 무대 바닥·세트 구조물의 고정상태 및 단차·개구부 이상 유무 확인",
+        "출연자 및 관계자가 촬영 중 무대 가장자리로 접근하거나 추락할 우려가 있는 구간에 대한 사전 안전조치 실시",
+        "촬영 동선 및 카메라 이동 동선을 사전에 확인하고 무대 가장자리와 충분한 안전거리를 확보",
+        "무대 및 세트 상부 작업 시 추락방지시설 설치 및 안전대 등 적정 보호구 착용",
+        "트러스·조명·음향장비 인양 시 체결상태 및 인양장비 이상 유무 확인 후 작업 실시",
+        "중량물 인양 및 상부 작업 시 하부 출입통제 실시",
+        "관객 입장 전 위험 작업 및 세트 설치·정리 작업을 완료하고 작업구역과 관객 동선을 분리",
+        "비상통로 및 피난동선을 확보하고 관객 입·퇴장 시 안전요원을 배치"
+      ],
+      "requiredPPE": [
+        "안전모",
+        "안전대(하네스)",
+        "안전화",
+        "소화기",
+        "무전기"
+      ]
+    },
+    {
+      "id": "t-4",
+      "title": "(동상이몽 / 미우새)실내 스튜디오 및 로케이션 세팅",
+      "workType": "실내 스튜디오 및 로케이션 세팅",
+      "riskLevel": "저위험",
+      "description": "실내 스튜디오 세트 제작 및 반입, 일반 주거지/상가 로케이션 실내 촬영 장비 세팅, 지미집 및 촬영 보조 장비 운용",
+      "hazards": [
+        "실내 협소 공간 자재/대형 장비 운반 중 협착 및 부딪힘",
+        "노출된 바닥 전선 케이블에 발걸림으로 인한 스태프/출연진 넘어짐",
+        "조명 스탠드 및 지미집 하중 불균형으로 인한 전도"
+      ],
+      "safetyMeasures": [
+        "협소 공간 대형 자재 운반 시 2인 1조 작업 및 유도자 동행",
+        "코너 모서리 보호대 및 바닥 스크래치 방지 보양재 설치",
+        "바닥 전선 케이블 덮개를 이용해서 보양 실시"
+      ],
+      "requiredPPE": [
+        "작업장갑",
+        "무전기"
+      ]
+    },
+    {
+      "id": "t-5",
+      "title": "임시전력·대형 발전차 배선 허가서 (예능 야외녹화 공통)",
+      "workType": "임시전력·대형 발전차 배선",
+      "riskLevel": "중위험",
+      "description": "300kW 대형 발전차 연계 전원 포설, 고전력 조명탑 및 스튜디오/야외 임시 분전반 연결",
+      "hazards": [
+        "고압 전원선 노출로 인한 누전 및 감전 사고",
+        "발전차 엔진 과열 및 유류 취급 중 화재 위험",
+        "보행로 횡단 케이블 단선 및 단락"
+      ],
+      "safetyMeasures": [
+        "보행 및 차량 통로용 중하중 케이블 프로텍터 시공",
+        "분전반 누전차단기(ELB) 감도전류 30mA 동작 사전 시험",
+        "발전차 접지 저항 10Ω 이하 접지봉 시공 및 유류 화재용 소화기 2대 배치"
+      ],
+      "requiredPPE": [
+        "절연안전화",
+        "절연장갑",
+        "안전모"
+      ]
+    },
+    {
+      "id": "t-6",
+      "title": "세트 해체·철거(야간작업) 허가서",
+      "workType": "세트 해체·철거(야간작업)",
+      "riskLevel": "고위험",
+      "description": "녹화 종료 후 심야/철야 세트 해체, 관객석 해체 작업, 목재·철골 및 5톤 화물차 반출 작업",
+      "hazards": [
+        "야간 및 철야작업에 따른 피로·졸음으로 인한 작업자 부주의 및 안전사고 위험",
+        "세트 해체 과정에서 상부 구조물 및 부재의 전도·붕괴·낙하 위험",
+        "해체된 구조물 및 폐기물 이동·적재 과정에서 중량물에 의한 협착·충돌 위험",
+        "세트 해체 및 폐기물 운반 중 작업자 간 충돌 및 작업동선 혼선 위험",
+        "5톤 화물차 상·하차 과정에서 차량과 작업자 간 충돌 및 화물 낙하 위험",
+        "화물차 적재함 승·하차 및 적재물 정리 과정에서 추락 위험",
+        "철거 잔재물 및 케이블 등으로 인한 걸림·넘어짐 위험"
+      ],
+      "safetyMeasures": [
+        "야간작업 전 작업구역 조도 및 조명 상태를 확인하고 충분한 조명 확보",
+        "철야작업 시 작업자 피로상태를 확인하고 적정 휴식시간 부여",
+        "세트 해체 전 구조물의 지지·고정상태를 확인하고 전도·붕괴 우려가 있는 부위부터 순차적으로 해체",
+        "상부 구조물 해체 시 하부 출입을 통제하고 해체 부재의 낙하방지 조치 실시",
+        "목재·철골 등 해체 작업 시 안전장갑 및 보안경 등 적정 보호구 착용",
+        "해체된 자재는 통행로에 방치하지 않고 지정된 장소에 즉시 정리·적재",
+        "중량물 운반 및 상차 작업 시 무리한 인력 운반을 금지하고 필요한 경우 운반장비 사용",
+        "5톤 화물차 상·하차 시 차량 주변 작업구역을 통제하고 운전자와 작업자 간 신호체계 준수",
+        "화물 적재 시 편하중 및 적재물 이탈이 발생하지 않도록 균등 적재 및 결속 실시",
+        "화물차 적재함 승·하차 시 안전한 승강방법을 준수하고 적재함에서 뛰어내리지 않도록 조치",
+        "철거 완료 후 작업장 내 잔재물·케이블·못 등 위험요인을 제거하고 통행로 확보"
+      ],
+      "requiredPPE": [
+        "안전모",
+        "안전화",
+        "야광조끼",
+        "방진마스크",
+        "코팅장갑",
+        "안전대(하네스)"
+      ]
+    }
+  ],
+  "programs": [
+    {
+      "title": "인기가요",
+      "genre": "예능(관객)",
+      "status": "제작중",
+      "mainStudio": "등촌 공개홀, 상암 프리즘타워",
+      "pd": "최장원",
+      "safetyOfficer": "이상욱 안전관리 책임자",
+      "riskRating": "고위험 (화기·폭파·고소)",
+      "id": "prog-1788334016120",
+      "monthlyPermits": [
+        {
+          "month": 1,
+          "monthLabel": "1월",
+          "status": "미발행"
+        },
+        {
+          "month": 2,
+          "monthLabel": "2월",
+          "status": "미발행"
+        },
+        {
+          "month": 3,
+          "monthLabel": "3월",
+          "status": "미발행"
+        },
+        {
+          "month": 4,
+          "monthLabel": "4월",
+          "status": "미발행"
+        },
+        {
+          "month": 5,
+          "monthLabel": "5월",
+          "status": "미발행"
+        },
+        {
+          "month": 6,
+          "monthLabel": "6월",
+          "status": "미발행"
+        },
+        {
+          "month": 7,
+          "monthLabel": "7월",
+          "status": "미발행"
+        },
+        {
+          "month": 8,
+          "monthLabel": "8월",
+          "status": "미발행"
+        },
+        {
+          "month": 9,
+          "monthLabel": "9월",
+          "status": "미발행"
+        },
+        {
+          "month": 10,
+          "monthLabel": "10월",
+          "status": "미발행"
+        },
+        {
+          "month": 11,
+          "monthLabel": "11월",
+          "status": "미발행"
+        },
+        {
+          "month": 12,
+          "monthLabel": "12월",
+          "status": "미발행"
+        }
+      ]
+    },
+    {
+      "title": "동상이몽",
+      "genre": "예능",
+      "status": "제작중",
+      "mainStudio": "상암 프리즘타워",
+      "pd": "안병욱",
+      "safetyOfficer": "이상욱 안전관리 책임자",
+      "riskRating": "고위험 (화기·폭파·고소)",
+      "id": "prog-1788333989376",
+      "monthlyPermits": [
+        {
+          "month": 1,
+          "monthLabel": "1월",
+          "status": "미발행"
+        },
+        {
+          "month": 2,
+          "monthLabel": "2월",
+          "status": "미발행"
+        },
+        {
+          "month": 3,
+          "monthLabel": "3월",
+          "status": "미발행"
+        },
+        {
+          "month": 4,
+          "monthLabel": "4월",
+          "status": "미발행"
+        },
+        {
+          "month": 5,
+          "monthLabel": "5월",
+          "status": "미발행"
+        },
+        {
+          "month": 6,
+          "monthLabel": "6월",
+          "status": "미발행"
+        },
+        {
+          "month": 7,
+          "monthLabel": "7월",
+          "status": "미발행"
+        },
+        {
+          "month": 8,
+          "monthLabel": "8월",
+          "status": "미발행"
+        },
+        {
+          "month": 9,
+          "monthLabel": "9월",
+          "status": "미발행"
+        },
+        {
+          "month": 10,
+          "monthLabel": "10월",
+          "status": "미발행"
+        },
+        {
+          "month": 11,
+          "monthLabel": "11월",
+          "status": "미발행"
+        },
+        {
+          "month": 12,
+          "monthLabel": "12월",
+          "status": "미발행"
+        }
+      ]
+    },
+    {
+      "title": "우리들의 발라드",
+      "genre": "예능(관객)",
+      "status": "제작중",
+      "mainStudio": "인천 넥스트 스튜디오",
+      "pd": "안정현",
+      "safetyOfficer": "이상욱 안전관리 책임자",
+      "riskRating": "고위험 (화기·폭파·고소)",
+      "id": "prog-1788333967832",
+      "monthlyPermits": [
+        {
+          "month": 1,
+          "monthLabel": "1월",
+          "status": "미발행"
+        },
+        {
+          "month": 2,
+          "monthLabel": "2월",
+          "status": "미발행"
+        },
+        {
+          "month": 3,
+          "monthLabel": "3월",
+          "status": "미발행"
+        },
+        {
+          "month": 4,
+          "monthLabel": "4월",
+          "status": "미발행"
+        },
+        {
+          "month": 5,
+          "monthLabel": "5월",
+          "status": "미발행"
+        },
+        {
+          "month": 6,
+          "monthLabel": "6월",
+          "status": "미발행"
+        },
+        {
+          "month": 7,
+          "monthLabel": "7월",
+          "status": "미발행"
+        },
+        {
+          "month": 8,
+          "monthLabel": "8월",
+          "status": "미발행"
+        },
+        {
+          "month": 9,
+          "monthLabel": "9월",
+          "status": "미발행"
+        },
+        {
+          "month": 10,
+          "monthLabel": "10월",
+          "status": "미발행"
+        },
+        {
+          "month": 11,
+          "monthLabel": "11월",
+          "status": "미발행"
+        },
+        {
+          "month": 12,
+          "monthLabel": "12월",
+          "status": "미발행"
+        }
+      ]
+    },
+    {
+      "title": "골때리는그녀들",
+      "genre": "예능",
+      "status": "제작중",
+      "mainStudio": "강화 고인돌 체육관",
+      "pd": "권형구",
+      "safetyOfficer": "이상욱 안전관리 책임자",
+      "riskRating": "고위험 (화기·폭파·고소)",
+      "id": "prog-1788333945884",
+      "monthlyPermits": [
+        {
+          "month": 1,
+          "monthLabel": "1월",
+          "status": "미발행"
+        },
+        {
+          "month": 2,
+          "monthLabel": "2월",
+          "status": "미발행"
+        },
+        {
+          "month": 3,
+          "monthLabel": "3월",
+          "status": "미발행"
+        },
+        {
+          "month": 4,
+          "monthLabel": "4월",
+          "status": "미발행"
+        },
+        {
+          "month": 5,
+          "monthLabel": "5월",
+          "status": "미발행"
+        },
+        {
+          "month": 6,
+          "monthLabel": "6월",
+          "status": "미발행"
+        },
+        {
+          "month": 7,
+          "monthLabel": "7월",
+          "status": "미발행"
+        },
+        {
+          "month": 8,
+          "monthLabel": "8월",
+          "status": "미발행"
+        },
+        {
+          "month": 9,
+          "monthLabel": "9월",
+          "status": "미발행"
+        },
+        {
+          "month": 10,
+          "monthLabel": "10월",
+          "status": "미발행"
+        },
+        {
+          "month": 11,
+          "monthLabel": "11월",
+          "status": "미발행"
+        },
+        {
+          "month": 12,
+          "monthLabel": "12월",
+          "status": "미발행"
+        }
+      ]
+    },
+    {
+      "title": "틈만나면",
+      "genre": "예능",
+      "status": "제작중",
+      "mainStudio": "상암 프리즘 타워",
+      "pd": "최보필",
+      "safetyOfficer": "이상욱 안전관리 책임자",
+      "riskRating": "고위험 (화기·폭파·고소)",
+      "id": "prog-1788333924500",
+      "monthlyPermits": [
+        {
+          "month": 1,
+          "monthLabel": "1월",
+          "status": "미발행"
+        },
+        {
+          "month": 2,
+          "monthLabel": "2월",
+          "status": "미발행"
+        },
+        {
+          "month": 3,
+          "monthLabel": "3월",
+          "status": "미발행"
+        },
+        {
+          "month": 4,
+          "monthLabel": "4월",
+          "status": "미발행"
+        },
+        {
+          "month": 5,
+          "monthLabel": "5월",
+          "status": "미발행"
+        },
+        {
+          "month": 6,
+          "monthLabel": "6월",
+          "status": "미발행"
+        },
+        {
+          "month": 7,
+          "monthLabel": "7월",
+          "status": "미발행"
+        },
+        {
+          "month": 8,
+          "monthLabel": "8월",
+          "status": "미발행"
+        },
+        {
+          "month": 9,
+          "monthLabel": "9월",
+          "status": "미발행"
+        },
+        {
+          "month": 10,
+          "monthLabel": "10월",
+          "status": "미발행"
+        },
+        {
+          "month": 11,
+          "monthLabel": "11월",
+          "status": "미발행"
+        },
+        {
+          "month": 12,
+          "monthLabel": "12월",
+          "status": "미발행"
+        }
+      ]
+    },
+    {
+      "title": "비서진",
+      "genre": "예능",
+      "status": "제작중",
+      "mainStudio": "상암 프리즘타워",
+      "pd": "김정욱",
+      "safetyOfficer": "이상욱 안전관리 책임자",
+      "riskRating": "고위험 (화기·폭파·고소)",
+      "id": "prog-1788333904099",
+      "monthlyPermits": [
+        {
+          "month": 1,
+          "monthLabel": "1월",
+          "status": "미발행"
+        },
+        {
+          "month": 2,
+          "monthLabel": "2월",
+          "status": "미발행"
+        },
+        {
+          "month": 3,
+          "monthLabel": "3월",
+          "status": "미발행"
+        },
+        {
+          "month": 4,
+          "monthLabel": "4월",
+          "status": "미발행"
+        },
+        {
+          "month": 5,
+          "monthLabel": "5월",
+          "status": "미발행"
+        },
+        {
+          "month": 6,
+          "monthLabel": "6월",
+          "status": "미발행"
+        },
+        {
+          "month": 7,
+          "monthLabel": "7월",
+          "status": "미발행"
+        },
+        {
+          "month": 8,
+          "monthLabel": "8월",
+          "status": "미발행"
+        },
+        {
+          "month": 9,
+          "monthLabel": "9월",
+          "status": "미발행"
+        },
+        {
+          "month": 10,
+          "monthLabel": "10월",
+          "status": "미발행"
+        },
+        {
+          "month": 11,
+          "monthLabel": "11월",
+          "status": "미발행"
+        },
+        {
+          "month": 12,
+          "monthLabel": "12월",
+          "status": "미발행"
+        }
+      ]
+    },
+    {
+      "title": "런닝맨",
+      "genre": "예능",
+      "status": "제작중",
+      "mainStudio": "상암 스튜디오",
+      "pd": "김솔마로",
+      "safetyOfficer": "이상욱 안전관리 책임자",
+      "riskRating": "고위험 (화기·폭파·고소)",
+      "id": "prog-1788328163342",
+      "monthlyPermits": [
+        {
+          "month": 1,
+          "monthLabel": "1월",
+          "status": "미발행"
+        },
+        {
+          "month": 2,
+          "monthLabel": "2월",
+          "status": "미발행"
+        },
+        {
+          "month": 3,
+          "monthLabel": "3월",
+          "status": "미발행"
+        },
+        {
+          "month": 4,
+          "monthLabel": "4월",
+          "status": "미발행"
+        },
+        {
+          "month": 5,
+          "monthLabel": "5월",
+          "status": "미발행"
+        },
+        {
+          "month": 6,
+          "monthLabel": "6월",
+          "status": "미발행"
+        },
+        {
+          "month": 7,
+          "monthLabel": "7월",
+          "status": "미발행"
+        },
+        {
+          "month": 8,
+          "monthLabel": "8월",
+          "status": "미발행"
+        },
+        {
+          "month": 9,
+          "monthLabel": "9월",
+          "status": "미발행"
+        },
+        {
+          "month": 10,
+          "monthLabel": "10월",
+          "status": "미발행"
+        },
+        {
+          "month": 11,
+          "monthLabel": "11월",
+          "status": "미발행"
+        },
+        {
+          "month": 12,
+          "monthLabel": "12월",
+          "status": "미발행"
+        }
+      ]
+    },
+    {
+      "id": "prog-1788315078819",
+      "title": "미운우리새끼",
+      "genre": "예능",
+      "status": "제작중",
+      "mainStudio": "상암 프리즘타워",
+      "pd": "정성원",
+      "safetyOfficer": "이상욱",
+      "riskRating": "A등급 (고위험)",
+      "monthlyPermits": [
+        {
+          "month": 1,
+          "monthLabel": "1월",
+          "status": "미발행"
+        },
+        {
+          "month": 2,
+          "monthLabel": "2월",
+          "status": "미발행"
+        },
+        {
+          "month": 3,
+          "monthLabel": "3월",
+          "status": "미발행"
+        },
+        {
+          "month": 4,
+          "monthLabel": "4월",
+          "status": "미발행"
+        },
+        {
+          "month": 5,
+          "monthLabel": "5월",
+          "status": "미발행"
+        },
+        {
+          "month": 6,
+          "monthLabel": "6월",
+          "status": "미발행"
+        },
+        {
+          "month": 7,
+          "monthLabel": "7월",
+          "status": "미발행"
+        },
+        {
+          "month": 8,
+          "monthLabel": "8월",
+          "status": "미발행"
+        },
+        {
+          "month": 9,
+          "monthLabel": "9월",
+          "status": "미발행"
+        },
+        {
+          "month": 10,
+          "monthLabel": "10월",
+          "status": "미발행"
+        },
+        {
+          "month": 11,
+          "monthLabel": "11월",
+          "status": "미발행"
+        },
+        {
+          "month": 12,
+          "monthLabel": "12월",
+          "status": "미발행"
+        }
+      ]
+    }
+  ],
+  "safetyLogs": [],
+  "meetingRecords": [],
+  "calendarEvents": [
+    {
+      "program": "안전관리자 정기회의",
+      "studio": "탄현 스튜디오",
+      "title": "회의",
+      "type": "TBM회의",
+      "status": "예정",
+      "date": "2026-09-10",
+      "time": "09:00 ~ 18:00",
+      "officer": "이상욱 안전관리 책임자",
+      "id": "e-1788761503706"
+    },
+    {
+      "program": "우리들의 발라드",
+      "studio": "인천 넥스트 스튜디오",
+      "title": "우리들의 발라드 리허설",
+      "type": "안전점검",
+      "status": "예정",
+      "date": "2026-09-11",
+      "time": "09:00 ~ 18:00",
+      "officer": "이상욱 안전관리 책임자",
+      "id": "e-1788761466829"
+    }
+  ],
+  "orgData": {
+    "csoRole": "안전보건총괄책임자",
+    "csoTitle": "대표이사",
+    "csoName": "공희철",
+    "committeeTitle": "산업안전보건위원회",
+    "committeeSub": "법정 심의·의결 기구",
+    "userMemberCount": 0,
+    "workerMemberCount": 0,
+    "safetyTeamTitle": "안전보건팀",
+    "safetyTeamSub": "전담 안전보건 조직",
+    "safetyLeaderRole": "안전관리자 1명",
+    "safetyLeaderName": "이상욱",
+    "safetyLeaderPhone": "010-6670-3534",
+    "supervisors": [
+      {
+        "id": "sp-1",
+        "cpName": "1CP",
+        "name": "박성훈",
+        "position": "국장",
+        "phone": "010-3160-3534"
+      },
+      {
+        "id": "sp-2",
+        "cpName": "2CP",
+        "name": "곽승영",
+        "position": "부장",
+        "phone": "010-9188-3534"
+      },
+      {
+        "id": "sp-3",
+        "cpName": "3CP",
+        "name": "조문주",
+        "position": "부장",
+        "phone": "010-5202-3534"
+      },
+      {
+        "id": "sp-4",
+        "cpName": "4CP",
+        "name": "박중원",
+        "position": "차장",
+        "phone": "010-4005-3534"
+      },
+      {
+        "id": "sp-5",
+        "cpName": "5CP",
+        "name": "정익승",
+        "position": "차장",
+        "phone": "010-8502-3534"
+      }
+    ]
+  },
+  "teamAccounts": [
+    {
+      "id": "admin",
+      "username": "admin",
+      "password": "prism2026!",
+      "name": "이상욱",
+      "role": "SUPER_ADMIN",
+      "department": "안전관리본부",
+      "phone": "010-6670-3534",
+      "permissions": {
+        "canManageTeam": true,
+        "canFinalApprove": true,
+        "canReviewPermits": true,
+        "canEditLogs": true,
+        "canEditTBM": true,
+        "canEditMeetings": true,
+        "canEditOrg": true,
+        "canEditPrograms": true,
+        "canEditHotline": true
+      },
+      "createdAt": "2026-08-25 09:00"
+    }
+  ]
+}

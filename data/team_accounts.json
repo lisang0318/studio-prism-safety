@@ -1,0 +1,44 @@
+[
+  {
+    "id": "e26e100",
+    "username": "e26e100",
+    "password": "li0317612!",
+    "name": "이상욱",
+    "role": "SUPER_ADMIN",
+    "department": "안전관리본부",
+    "phone": "010-6670-3534",
+    "permissions": {
+      "canManageTeam": true,
+      "canFinalApprove": true,
+      "canReviewPermits": true,
+      "canEditLogs": true,
+      "canEditTBM": true,
+      "canEditMeetings": true,
+      "canEditOrg": true,
+      "canEditPrograms": true,
+      "canEditHotline": true
+    },
+    "createdAt": "2026-08-25 09:00"
+  },
+  {
+    "username": "sbs1",
+    "password": "sbssbs1",
+    "name": "김안전",
+    "role": "SUPER_ADMIN",
+    "department": "스튜디오프리즘 총괄안전관리단",
+    "phone": "010-",
+    "permissions": {
+      "canManageTeam": true,
+      "canFinalApprove": true,
+      "canReviewPermits": true,
+      "canEditLogs": true,
+      "canEditTBM": true,
+      "canEditMeetings": true,
+      "canEditOrg": true,
+      "canEditPrograms": true,
+      "canEditHotline": true
+    },
+    "id": "sbs1",
+    "createdAt": "2026-09-02T06:45:28.295Z"
+  }
+]

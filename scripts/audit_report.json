@@ -1,0 +1,55 @@
+{
+  "menus": {},
+  "scenario": {
+    "addProgram": {
+      "success": true,
+      "programId": "prog-1788251956265",
+      "title": "테스트 프로그램"
+    },
+    "weatherLookup": {
+      "condition": "흐림",
+      "temperature": "26.3",
+      "precipitationProbability": "84%",
+      "windSpeed": "2.1 m/s",
+      "location": "상암 프리즘타워"
+    },
+    "addPermit": {
+      "success": true,
+      "permitId": "wp-1788251957478",
+      "permitNumber": "PRISM-WP-20260901-01"
+    },
+    "addTbm": {
+      "success": true,
+      "tbmId": "tbm-1788251957509",
+      "tbmNumber": "TBM-20260901-01"
+    },
+    "addOpinion": {
+      "success": true,
+      "opinionId": "op-1788251957539",
+      "opinionNumber": "VOICE-20260901-01"
+    }
+  },
+  "dashboard": {
+    "totalPermits": 1,
+    "pendingPermits": 1,
+    "highRiskPermits": 1,
+    "unresolvedOpinions": 1,
+    "kpiUpdatedSuccessfully": true
+  },
+  "workPermit": {},
+  "persistence": {
+    "dbFileExists": true,
+    "dbFileSize": 28328,
+    "permitSavedInDisk": true,
+    "opinionSavedInDisk": true,
+    "programSavedInDisk": true,
+    "weatherSavedInPermit": {
+      "condition": "흐림",
+      "temperature": "26.3",
+      "precipitationProbability": "84%",
+      "windSpeed": "2.1 m/s"
+    }
+  },
+  "security": {},
+  "errors": []
+}
