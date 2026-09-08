@@ -266,8 +266,10 @@ export default function Header({ onOpenMobileMenu }: HeaderProps) {
 
             {/* Live QR Code Box */}
             {(() => {
+              const isCloudDomain = typeof window !== 'undefined' && !window.location.hostname.includes('localhost') && !window.location.hostname.includes('127.0.0.1');
+              const cloudOrigin = (typeof window !== 'undefined' && isCloudDomain) ? window.location.origin : 'https://studio-prism-safety.onrender.com';
               const activeBase = qrMode === 'tunnel'
-                ? (tunnelUrl || 'https://environments-graphic-arrested-strip.trycloudflare.com')
+                ? (isCloudDomain ? cloudOrigin : (tunnelUrl || 'https://studio-prism-safety.onrender.com'))
                 : qrMode === 'ip'
                   ? (serverIp ? `http://${serverIp}:3000` : 'http://10.210.115.120:3000')
                   : 'http://localhost:3000';

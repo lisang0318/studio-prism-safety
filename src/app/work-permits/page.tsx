@@ -107,11 +107,16 @@ function WorkPermitsContent() {
   }, [searchParams]);
 
   // Determine base domain based on selected mode
-  let baseDomain = tunnelUrl || 'https://mixed-relation-prerequisite-rest.trycloudflare.com';
-  if (qrMode === 'ip') {
-    baseDomain = serverIp ? `http://${serverIp}:3000` : 'http://10.210.115.120:3000';
-  } else if (qrMode === 'local') {
-    baseDomain = origin || 'http://localhost:3000';
+  const isCloudDomain = typeof window !== 'undefined' && !window.location.hostname.includes('localhost') && !window.location.hostname.includes('127.0.0.1');
+  const cloudOrigin = (typeof window !== 'undefined' && isCloudDomain) ? window.location.origin : 'https://studio-prism-safety.onrender.com';
+
+  let baseDomain = isCloudDomain ? cloudOrigin : (tunnelUrl || 'https://studio-prism-safety.onrender.com');
+  if (!isCloudDomain) {
+    if (qrMode === 'ip') {
+      baseDomain = serverIp ? `http://${serverIp}:3000` : 'http://10.210.115.120:3000';
+    } else if (qrMode === 'local') {
+      baseDomain = origin || 'http://localhost:3000';
+    }
   }
   const qrApplyUrl = `${baseDomain}/work-permit-apply`;
 
