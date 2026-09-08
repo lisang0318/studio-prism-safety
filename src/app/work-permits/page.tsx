@@ -277,20 +277,43 @@ function WorkPermitsContent() {
     return matchSearch && matchStatus && matchStudio;
   });
 
+  const getDisplayWorkType = (type: string) => {
+    if (!type) return '일반작업';
+    if (type.includes('관객 참여') || type.includes('무대 세트') || type.includes('트러스') || type.includes('리깅')) {
+      return '무대세트·트러스 리깅';
+    }
+    if (type.includes('스포츠') || type.includes('경기장')) {
+      return '스포츠·경기장 세트';
+    }
+    if (type.includes('로케이션') || type.includes('미션')) {
+      return '야외 로케이션 미션';
+    }
+    if (type.includes('임시전력') || type.includes('발전차')) {
+      return '임시전력·발전차 배선';
+    }
+    if (type.includes('해체') || type.includes('철거')) {
+      return '세트 해체·철거';
+    }
+    if (type.length > 14) {
+      return type.slice(0, 13) + '…';
+    }
+    return type;
+  };
+
   const getStatusBadge = (status: PermitStatus) => {
     switch (status) {
       case '승인완료':
-        return <span className="inline-flex items-center justify-center whitespace-nowrap px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-300">승인완료</span>;
+        return <span className="inline-flex items-center justify-center whitespace-nowrap px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-300 shadow-xs">승인완료</span>;
       case '작업진행중':
-        return <span className="inline-flex items-center justify-center whitespace-nowrap px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-300 animate-pulse">작업진행중</span>;
+        return <span className="inline-flex items-center justify-center whitespace-nowrap px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-300 shadow-xs animate-pulse">작업진행중</span>;
       case '승인대기':
-        return <span className="inline-flex items-center justify-center whitespace-nowrap px-3 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-300">승인대기</span>;
+        return <span className="inline-flex items-center justify-center whitespace-nowrap px-3 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-300 shadow-xs">승인대기</span>;
       case '작업완료':
-        return <span className="inline-flex items-center justify-center whitespace-nowrap px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-700 border border-slate-300">작업완료</span>;
+        return <span className="inline-flex items-center justify-center whitespace-nowrap px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-700 border border-slate-300 shadow-xs">작업완료</span>;
       case '반려':
-        return <span className="inline-flex items-center justify-center whitespace-nowrap px-3 py-1 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-300">반려됨</span>;
+        return <span className="inline-flex items-center justify-center whitespace-nowrap px-3 py-1 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-300 shadow-xs">반려됨</span>;
       default:
-        return <span className="inline-flex items-center justify-center whitespace-nowrap px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-800 border border-slate-300">{status}</span>;
+        return <span className="inline-flex items-center justify-center whitespace-nowrap px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-800 border border-slate-300 shadow-xs">{status}</span>;
     }
   };
 
@@ -653,13 +676,16 @@ function WorkPermitsContent() {
                   ) : (
                     filteredPermits.map(permit => (
                       <tr key={permit.id} className="hover:bg-slate-50/80 transition group">
-                        <td className="px-4 py-3.5">
-                          <span className={`inline-block max-w-[180px] px-2.5 py-1 rounded-lg text-xs font-bold break-keep leading-snug ${
-                            permit.riskLevel === '고위험' ? 'bg-rose-50 text-rose-700 border border-rose-200' :
-                            permit.riskLevel === '중위험' ? 'bg-amber-50 text-amber-700 border border-amber-200' :
-                            'bg-blue-50 text-blue-700 border border-blue-200'
-                          }`}>
-                            {permit.workType}
+                        <td className="px-4 py-3.5 whitespace-nowrap">
+                          <span
+                            title={permit.workType}
+                            className={`inline-flex items-center justify-center whitespace-nowrap px-3 py-1 rounded-lg text-xs font-bold shadow-xs ${
+                              permit.riskLevel === '고위험' ? 'bg-rose-50 text-rose-700 border border-rose-200' :
+                              permit.riskLevel === '중위험' ? 'bg-amber-50 text-amber-700 border border-amber-200' :
+                              'bg-blue-50 text-blue-700 border border-blue-200'
+                            }`}
+                          >
+                            {getDisplayWorkType(permit.workType)}
                           </span>
                         </td>
                         <td className="px-4 py-3.5 font-mono text-[11px] whitespace-nowrap">
