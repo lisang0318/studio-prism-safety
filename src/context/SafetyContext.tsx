@@ -222,33 +222,30 @@ export function SafetyProvider({ children }: { children: React.ReactNode }) {
             const localOrg = localStorage.getItem('PRISM_ORG_DATA');
             if (localOrg) {
               const parsedOrg = JSON.parse(localOrg);
-              if (parsedOrg && Array.isArray(parsedOrg.supervisors)) {
+              if (parsedOrg) {
                 const serverSpIds = new Set((data.orgData.supervisors || []).map((s: any) => s.id));
                 const serverSpNames = new Set((data.orgData.supervisors || []).map((s: any) => s.name));
-                const missingInServer = parsedOrg.supervisors.filter((s: any) => !serverSpIds.has(s.id) && !serverSpNames.has(s.name));
+                const missingInServer = (parsedOrg.supervisors || []).filter((s: any) => !serverSpIds.has(s.id) && !serverSpNames.has(s.name));
                 
-                if (missingInServer.length > 0) {
-                  const mergedOrg = {
-                    ...data.orgData,
-                    ...parsedOrg,
-                    supervisors: [...(data.orgData.supervisors || []), ...missingInServer]
-                  };
-                  setOrgData(mergedOrg);
-                  localStorage.setItem('PRISM_ORG_DATA', JSON.stringify(mergedOrg));
+                const mergedOrg = {
+                  ...data.orgData,
+                  ...parsedOrg,
+                  supervisors: missingInServer.length > 0
+                    ? [...(data.orgData.supervisors || []), ...missingInServer]
+                    : (parsedOrg.supervisors && parsedOrg.supervisors.length > 0 ? parsedOrg.supervisors : data.orgData.supervisors)
+                };
+                setOrgData(mergedOrg);
+                localStorage.setItem('PRISM_ORG_DATA', JSON.stringify(mergedOrg));
+                if (
+                  missingInServer.length > 0 ||
+                  (parsedOrg.userMemberCount !== undefined && parsedOrg.userMemberCount !== data.orgData.userMemberCount) ||
+                  (parsedOrg.workerMemberCount !== undefined && parsedOrg.workerMemberCount !== data.orgData.workerMemberCount)
+                ) {
                   fetch('/api/safety-data', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ action: 'update_org_data', payload: mergedOrg })
                   }).catch(() => {});
-                } else if (parsedOrg.supervisors.length >= (data.orgData.supervisors || []).length) {
-                  const mergedOrg = {
-                    ...data.orgData,
-                    ...parsedOrg
-                  };
-                  setOrgData(mergedOrg);
-                } else {
-                  setOrgData(data.orgData);
-                  localStorage.setItem('PRISM_ORG_DATA', JSON.stringify(data.orgData));
                 }
               } else {
                 setOrgData(data.orgData);

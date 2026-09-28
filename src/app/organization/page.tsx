@@ -181,6 +181,105 @@ export default function OrganizationPage() {
     updateOrgData(fullOrg);
   };
 
+  const handleSaveCso = (e: React.FormEvent) => {
+    e.preventDefault();
+    const updatedRole = csoRole.trim() || '안전보건총괄책임자';
+    const updatedTitle = csoTitle.trim() || '대표이사';
+    const updatedName = csoName.trim() || '공희철';
+    setCsoRole(updatedRole);
+    setCsoTitle(updatedTitle);
+    setCsoName(updatedName);
+
+    const fullOrg = {
+      csoRole: updatedRole,
+      csoTitle: updatedTitle,
+      csoName: updatedName,
+      committeeTitle,
+      committeeSub,
+      userMemberCount,
+      workerMemberCount,
+      safetyTeamTitle,
+      safetyTeamSub,
+      safetyLeaderRole,
+      safetyLeaderName,
+      safetyLeaderPhone,
+      supervisors
+    };
+    try {
+      localStorage.setItem('PRISM_ORG_DATA', JSON.stringify(fullOrg));
+    } catch (e) {}
+    updateOrgData(fullOrg);
+    setShowEditCsoModal(false);
+    alert(`안전보건총괄책임자(${updatedTitle} ${updatedName}) 정보가 저장되었습니다.`);
+  };
+
+  const handleSaveCommittee = (e: React.FormEvent) => {
+    e.preventDefault();
+    const parsedUserCount = Number(userMemberCount) >= 0 ? Number(userMemberCount) : 0;
+    const parsedWorkerCount = Number(workerMemberCount) >= 0 ? Number(workerMemberCount) : 0;
+    const updatedTitle = committeeTitle.trim() || '산업안전보건위원회';
+    const updatedSub = committeeSub.trim() || '법정 심의·의결 기구';
+
+    setUserMemberCount(parsedUserCount);
+    setWorkerMemberCount(parsedWorkerCount);
+    setCommitteeTitle(updatedTitle);
+    setCommitteeSub(updatedSub);
+
+    const fullOrg = {
+      csoRole,
+      csoTitle,
+      csoName,
+      committeeTitle: updatedTitle,
+      committeeSub: updatedSub,
+      userMemberCount: parsedUserCount,
+      workerMemberCount: parsedWorkerCount,
+      safetyTeamTitle,
+      safetyTeamSub,
+      safetyLeaderRole,
+      safetyLeaderName,
+      safetyLeaderPhone,
+      supervisors
+    };
+    try {
+      localStorage.setItem('PRISM_ORG_DATA', JSON.stringify(fullOrg));
+    } catch (e) {}
+    updateOrgData(fullOrg);
+    setShowEditCommitteeModal(false);
+    alert(`산업안전보건위원회 구성(사측위원 ${parsedUserCount}명 / 노측위원 ${parsedWorkerCount}명)이 성공적으로 저장되었습니다.`);
+  };
+
+  const handleSaveTeam = (e: React.FormEvent) => {
+    e.preventDefault();
+    const updatedTitle = safetyTeamTitle.trim() || '안전보건팀';
+    const updatedLeader = safetyLeaderName.trim() || '이상욱';
+    const updatedPhone = safetyLeaderPhone.trim() || '010-6670-3534';
+    setSafetyTeamTitle(updatedTitle);
+    setSafetyLeaderName(updatedLeader);
+    setSafetyLeaderPhone(updatedPhone);
+
+    const fullOrg = {
+      csoRole,
+      csoTitle,
+      csoName,
+      committeeTitle,
+      committeeSub,
+      userMemberCount,
+      workerMemberCount,
+      safetyTeamTitle: updatedTitle,
+      safetyTeamSub,
+      safetyLeaderRole,
+      safetyLeaderName: updatedLeader,
+      safetyLeaderPhone: updatedPhone,
+      supervisors
+    };
+    try {
+      localStorage.setItem('PRISM_ORG_DATA', JSON.stringify(fullOrg));
+    } catch (e) {}
+    updateOrgData(fullOrg);
+    setShowEditTeamModal(false);
+    alert(`전담 안전보건팀(${updatedLeader} 책임자) 정보가 저장되었습니다.`);
+  };
+
   // Supervisor handlers
   const handleOpenAddSupervisor = () => {
     setEditingSupervisor(null);
@@ -552,15 +651,15 @@ export default function OrganizationPage() {
       {activeMainTab === 'chart' && (
         <div className="space-y-6 animate-in fade-in-50 duration-300">
           {/* Quick Stats Badges */}
-          <div className="flex items-center gap-3 text-xs font-bold">
+          <div className="flex flex-wrap items-center gap-2.5 text-xs font-bold">
             <span className="px-3 py-1 rounded-full bg-[#FF4B3E]/10 text-[#FF4B3E] border border-[#FF4B3E]/30 font-black">
               회사 {totalCompanyMembers}명
             </span>
+            <span className="px-3 py-1 rounded-full bg-purple-100 text-purple-900 border border-purple-200 font-bold">
+              산업안전보건위원 {userMemberCount + workerMemberCount}명 (사측 {userMemberCount}명 · 노측 {workerMemberCount}명)
+            </span>
             <span className="px-3 py-1 rounded-full bg-emerald-100 text-emerald-900 border border-emerald-200 font-bold">
               협력업체 0명
-            </span>
-            <span className="px-3 py-1 rounded-full bg-purple-100 text-purple-900 border border-purple-200 font-bold">
-              위원 {userMemberCount + workerMemberCount}명
             </span>
           </div>
 
@@ -612,8 +711,8 @@ export default function OrganizationPage() {
                   </div>
                 </div>
                 <div className="text-xs text-slate-800 font-bold mt-3 flex items-center justify-between pt-3 border-t border-slate-200">
-                  <span>사용자위원 {userMemberCount}명</span>
-                  <span>근로자위원 {workerMemberCount}명</span>
+                  <span className="px-2 py-0.5 rounded-md bg-purple-50 text-purple-900 border border-purple-200 font-bold">사측위원 {userMemberCount}명</span>
+                  <span className="px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-900 border border-indigo-200 font-bold">노측위원 {workerMemberCount}명</span>
                 </div>
               </div>
 
@@ -1097,7 +1196,7 @@ export default function OrganizationPage() {
                 <X className="w-5 h-5" />
               </button>
             </div>
-            <form onSubmit={(e) => { e.preventDefault(); saveStateToStorage(); setShowEditCsoModal(false); }} className="space-y-3">
+            <form onSubmit={handleSaveCso} className="space-y-3">
               <div>
                 <label className="block font-black text-slate-900 mb-1">직책 역할</label>
                 <input
@@ -1141,12 +1240,12 @@ export default function OrganizationPage() {
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white border border-slate-200 rounded-3xl max-w-md w-full p-6 text-slate-900 shadow-2xl space-y-4 text-xs">
             <div className="flex items-center justify-between pb-3 border-b border-slate-200">
-              <h3 className="text-base font-black text-slate-900">산업안전보건위원회 구성 수정</h3>
+              <h3 className="text-base font-black text-slate-900">산업안전보건위원회 구성 (사측·노측 위원) 수정</h3>
               <button onClick={() => setShowEditCommitteeModal(false)} className="text-slate-800 hover:text-black">
                 <X className="w-5 h-5" />
               </button>
             </div>
-            <form onSubmit={(e) => { e.preventDefault(); saveStateToStorage(); setShowEditCommitteeModal(false); }} className="space-y-3">
+            <form onSubmit={handleSaveCommittee} className="space-y-3">
               <div>
                 <label className="block font-black text-slate-900 mb-1">위원회 명칭</label>
                 <input
@@ -1158,21 +1257,25 @@ export default function OrganizationPage() {
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="block font-black text-slate-900 mb-1">사용자위원 수 (명)</label>
+                  <label className="block font-black text-purple-950 mb-1">사측위원 수 (명) *</label>
                   <input
                     type="number"
+                    min="0"
+                    required
                     value={userMemberCount}
-                    onChange={e => setUserMemberCount(Number(e.target.value))}
-                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 text-slate-900 font-mono font-bold"
+                    onChange={e => setUserMemberCount(e.target.value === '' ? ('' as any) : Number(e.target.value))}
+                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 text-slate-900 font-mono font-bold focus:bg-white focus:border-[#FF4B3E]"
                   />
                 </div>
                 <div>
-                  <label className="block font-black text-slate-900 mb-1">근로자위원 수 (명)</label>
+                  <label className="block font-black text-indigo-950 mb-1">노측위원 수 (명) *</label>
                   <input
                     type="number"
+                    min="0"
+                    required
                     value={workerMemberCount}
-                    onChange={e => setWorkerMemberCount(Number(e.target.value))}
-                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 text-slate-900 font-mono font-bold"
+                    onChange={e => setWorkerMemberCount(e.target.value === '' ? ('' as any) : Number(e.target.value))}
+                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 text-slate-900 font-mono font-bold focus:bg-white focus:border-[#FF4B3E]"
                   />
                 </div>
               </div>
@@ -1197,7 +1300,7 @@ export default function OrganizationPage() {
                 <X className="w-5 h-5" />
               </button>
             </div>
-            <form onSubmit={(e) => { e.preventDefault(); saveStateToStorage(); setShowEditTeamModal(false); }} className="space-y-3">
+            <form onSubmit={handleSaveTeam} className="space-y-3">
               <div>
                 <label className="block font-black text-slate-900 mb-1">조직 명칭</label>
                 <input
@@ -1341,7 +1444,7 @@ export default function OrganizationPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="p-3 rounded-xl border border-slate-300 text-center">
                     <div className="font-black text-slate-900">{committeeTitle}</div>
-                    <div className="text-xs text-slate-700 font-bold mt-1">사용자위원 {userMemberCount}명 / 근로자위원 {workerMemberCount}명</div>
+                    <div className="text-xs text-slate-700 font-bold mt-1">사측위원 {userMemberCount}명 / 노측위원 {workerMemberCount}명 (총 {userMemberCount + workerMemberCount}명)</div>
                   </div>
                   <div className="p-3 rounded-xl border border-emerald-300 bg-emerald-50 text-center">
                     <div className="font-black text-emerald-900">{safetyTeamTitle}</div>
