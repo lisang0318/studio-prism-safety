@@ -470,7 +470,8 @@ function WorkerFeedbackContent() {
             </div>
           </div>
         </div>
-      )}
+      </div>
+    )}
 
       {/* ========================================================================= */}
       {/* TAB 2: SUBMISSIONS & ADMIN RESOLUTION MANAGEMENT                           */}

@@ -113,7 +113,32 @@ export default function OrganizationPage() {
   });
   const [accountError, setAccountError] = useState('');
 
-  // Sync Org Data from central Server
+  // Mount: Initial load from localStorage
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('PRISM_ORG_DATA');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.csoRole) setCsoRole(parsed.csoRole);
+        if (parsed.csoTitle) setCsoTitle(parsed.csoTitle);
+        if (parsed.csoName) setCsoName(parsed.csoName);
+        if (parsed.committeeTitle) setCommitteeTitle(parsed.committeeTitle);
+        if (parsed.committeeSub) setCommitteeSub(parsed.committeeSub);
+        if (parsed.safetyTeamTitle) setSafetyTeamTitle(parsed.safetyTeamTitle);
+        if (parsed.safetyTeamSub) setSafetyTeamSub(parsed.safetyTeamSub);
+        if (parsed.safetyLeaderRole) setSafetyLeaderRole(parsed.safetyLeaderRole);
+        if (parsed.safetyLeaderName) setSafetyLeaderName(parsed.safetyLeaderName);
+        if (parsed.safetyLeaderPhone) setSafetyLeaderPhone(parsed.safetyLeaderPhone);
+        if (parsed.supervisors && Array.isArray(parsed.supervisors) && parsed.supervisors.length > 0) {
+          setSupervisors(parsed.supervisors);
+        }
+        if (parsed.userMemberCount !== undefined) setUserMemberCount(parsed.userMemberCount);
+        if (parsed.workerMemberCount !== undefined) setWorkerMemberCount(parsed.workerMemberCount);
+      }
+    } catch (e) {}
+  }, []);
+
+  // Sync Org Data from central Server / Context
   useEffect(() => {
     if (orgData) {
       if (orgData.csoRole) setCsoRole(orgData.csoRole);
@@ -126,14 +151,16 @@ export default function OrganizationPage() {
       if (orgData.safetyLeaderRole) setSafetyLeaderRole(orgData.safetyLeaderRole);
       if (orgData.safetyLeaderName) setSafetyLeaderName(orgData.safetyLeaderName);
       if (orgData.safetyLeaderPhone) setSafetyLeaderPhone(orgData.safetyLeaderPhone);
-      if (orgData.supervisors) setSupervisors(orgData.supervisors);
+      if (orgData.supervisors && Array.isArray(orgData.supervisors) && orgData.supervisors.length > 0) {
+        setSupervisors(orgData.supervisors);
+      }
       if (orgData.userMemberCount !== undefined) setUserMemberCount(orgData.userMemberCount);
       if (orgData.workerMemberCount !== undefined) setWorkerMemberCount(orgData.workerMemberCount);
     }
   }, [orgData]);
 
   const saveStateToStorage = (updatedSupervisors = supervisors) => {
-    updateOrgData({
+    const fullOrg = {
       csoRole,
       csoTitle,
       csoName,
@@ -147,7 +174,11 @@ export default function OrganizationPage() {
       safetyLeaderName,
       safetyLeaderPhone,
       supervisors: updatedSupervisors
-    });
+    };
+    try {
+      localStorage.setItem('PRISM_ORG_DATA', JSON.stringify(fullOrg));
+    } catch (e) {}
+    updateOrgData(fullOrg);
   };
 
   // Supervisor handlers
@@ -196,13 +227,16 @@ export default function OrganizationPage() {
     setSupervisors(updated);
     saveStateToStorage(updated);
     setShowSupervisorModal(false);
+    alert(`${editingSupervisor ? '수정' : '추가'}하신 관리감독자(${spName.trim()} ${spPosition.trim() || '관리감독자'}) 정보가 조직도에 영구 저장되었습니다.`);
   };
 
   const handleDeleteSupervisor = (id: string) => {
-    if (confirm('이 관리감독자 항목을 삭제하시겠습니까?')) {
+    const target = supervisors.find(s => s.id === id);
+    if (confirm(`'${target ? target.name : ''}' 관리감독자 항목을 영구 삭제하시겠습니까?`)) {
       const updated = supervisors.filter(s => s.id !== id);
       setSupervisors(updated);
       saveStateToStorage(updated);
+      alert('관리감독자 항목이 삭제되었습니다.');
     }
   };
 

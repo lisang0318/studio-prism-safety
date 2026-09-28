@@ -394,54 +394,51 @@ function WorkPermitsContent() {
                 {templates.map(tmpl => (
                   <div
                     key={tmpl.id}
-                    className={`border rounded-2xl p-5 shadow-lg flex flex-col justify-between space-y-4 transition ${
-                      tmpl.isCustom ? 'bg-indigo-950/30 border-indigo-700/60 hover:border-indigo-500' : 'bg-slate-100 border-slate-200 hover:border-slate-300'
-                    }`}
+                    className="bg-white border border-slate-200/90 hover:border-slate-300 rounded-2xl p-5 shadow-sm flex flex-col justify-between space-y-4 transition group"
                   >
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
-                        <span className={`text-[10px] px-2 py-0.5 rounded font-black ${
-                          tmpl.riskLevel === '고위험' ? 'bg-rose-500/20 text-rose-700 border border-rose-500/30' :
-                          tmpl.riskLevel === '중위험' ? 'bg-amber-500/20 text-amber-700 border border-amber-500/30' :
-                          'bg-[#FF4B3E]/150/20 text-blue-700 border border-[#FF4B3E]/30'
+                        <span className={`text-[10px] px-2.5 py-0.5 rounded-full font-black ${
+                          tmpl.riskLevel === '고위험' ? 'bg-rose-50 text-rose-700 border border-rose-200' :
+                          tmpl.riskLevel === '중위험' ? 'bg-amber-50 text-amber-700 border border-amber-200' :
+                          'bg-blue-50 text-blue-700 border border-blue-200'
                         }`}>
                           {tmpl.riskLevel}
                         </span>
                         <div className="flex items-center gap-1.5">
                           <button
                             onClick={() => handleOpenEditTemplateModal(tmpl)}
-                            className="px-2 py-1 bg-slate-100 hover:bg-slate-700 text-sky-400 hover:text-slate-900 rounded-lg text-[10px] font-bold border border-slate-200 flex items-center gap-1 transition"
+                            className="px-2.5 py-1 bg-slate-50 hover:bg-slate-100 text-slate-700 hover:text-black rounded-lg text-[10px] font-bold border border-slate-200 flex items-center gap-1 transition"
                             title="양식 내용 수정"
                           >
-                            <Edit3 className="w-3 h-3" />
+                            <Edit3 className="w-3 h-3 text-[#FF4B3E]" />
                             <span>수정</span>
                           </button>
-                          {tmpl.isCustom ? (
-                            <button
-                              onClick={() => {
-                                if (confirm(`'${tmpl.title}' 양식을 삭제하시겠습니까?`)) {
-                                  deleteTemplate(tmpl.id);
-                                }
-                              }}
-                              className="p-1 text-slate-800 hover:text-rose-700 transition"
-                              title="양식 삭제"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          ) : null}
+                          <button
+                            onClick={() => {
+                              if (confirm(`'${tmpl.title}' (${tmpl.workType}) 양식을 영구 삭제하시겠습니까?\n\n삭제 시 모바일 QR 신청 양식 목록에서도 즉시 제외됩니다.`)) {
+                                deleteTemplate(tmpl.id);
+                                alert(`'${tmpl.title}' 양식이 삭제되었습니다.`);
+                              }
+                            }}
+                            className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition"
+                            title="양식 영구 삭제"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
                         </div>
                       </div>
 
                       <h3 className="text-sm font-black text-slate-900">{tmpl.title}</h3>
-                      <div className="text-[11px] text-sky-400 font-bold flex items-center gap-1">
+                      <div className="text-[11px] text-[#FF4B3E] font-bold flex items-center gap-1">
                         <Tag className="w-3 h-3" />
                         <span>작업유형: {tmpl.workType}</span>
                       </div>
-                      <p className="text-xs text-slate-800 leading-relaxed line-clamp-2">
+                      <p className="text-xs text-slate-700 leading-relaxed line-clamp-2">
                         {tmpl.description}
                       </p>
 
-                      <div className="space-y-1 pt-2 border-t border-slate-200 text-[11px]">
+                      <div className="space-y-1 pt-2 border-t border-slate-100 text-[11px]">
                         <div className="text-rose-700 font-medium line-clamp-1">
                           ● 주요위험: {tmpl.hazards.join(', ')}
                         </div>
@@ -452,24 +449,43 @@ function WorkPermitsContent() {
 
                       <div className="flex flex-wrap gap-1 pt-1">
                         {tmpl.requiredPPE.map((p, idx) => (
-                          <span key={idx} className="text-[10px] px-2 py-0.5 bg-slate-50 text-sky-300 rounded border border-slate-200">
+                          <span key={idx} className="text-[10px] px-2 py-0.5 bg-slate-50 text-slate-700 rounded-md border border-slate-200 font-medium">
                             {p}
                           </span>
                         ))}
                       </div>
                     </div>
 
-                    <div className="pt-3 border-t border-slate-200 flex items-center justify-between gap-2">
+                    <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
                       <Link
                         href={`/work-permit-apply?template=${tmpl.id}`}
                         target="_blank"
-                        className="w-full text-center py-2 rounded-xl bg-[#FF4B3E]/15 hover:bg-[#FF4B3E] text-[#FF4B3E] hover:text-white font-bold text-xs transition border border-[#FF4B3E]/30"
+                        className="w-full text-center py-2 rounded-xl bg-slate-50 hover:bg-[#FF4B3E] text-[#FF4B3E] hover:text-white font-bold text-xs transition border border-slate-200 hover:border-[#FF4B3E] shadow-xs"
                       >
                         이 양식으로 모바일 신청창 열기
                       </Link>
                     </div>
                   </div>
                 ))}
+
+                {/* Dashed Add New Template Card */}
+                <button
+                  type="button"
+                  onClick={() => setShowCreateModal(true)}
+                  className="border-2 border-dashed border-slate-300 hover:border-[#FF4B3E] hover:bg-rose-50/40 rounded-2xl p-6 flex flex-col items-center justify-center text-center space-y-2.5 transition group min-h-[220px]"
+                >
+                  <div className="w-12 h-12 rounded-2xl bg-rose-50 group-hover:bg-[#FF4B3E] text-[#FF4B3E] group-hover:text-white flex items-center justify-center transition shadow-xs">
+                    <Plus className="w-6 h-6 stroke-[2.5]" />
+                  </div>
+                  <div>
+                    <div className="font-black text-slate-900 text-sm group-hover:text-[#FF4B3E] transition">
+                      + 새 작업유형 및 양식 추가
+                    </div>
+                    <div className="text-[11px] text-slate-500 mt-1 max-w-[210px] leading-relaxed">
+                      특수촬영, 신규 무대 세트 등 원하는 양식을 추가하면 모바일 QR 신청 화면에 즉시 등록됩니다.
+                    </div>
+                  </div>
+                </button>
               </div>
             </div>
 
@@ -1055,23 +1071,41 @@ function WorkPermitsContent() {
                 </div>
               </div>
 
-              <div className="flex justify-end gap-2 pt-3 border-t border-slate-200">
+              <div className="flex items-center justify-between pt-3 border-t border-slate-200">
                 <button
                   type="button"
                   onClick={() => {
-                    setShowEditTemplateModal(false);
-                    setEditingTemplate(null);
+                    if (editingTemplate && confirm(`'${editingTemplate.title}' (${editingTemplate.workType}) 양식을 영구 삭제하시겠습니까?\n\n삭제 시 모바일 QR 신청 양식 목록에서도 즉시 제외됩니다.`)) {
+                      deleteTemplate(editingTemplate.id);
+                      setShowEditTemplateModal(false);
+                      setEditingTemplate(null);
+                      alert(`'${editingTemplate.title}' 양식이 삭제되었습니다.`);
+                    }
                   }}
-                  className="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 font-bold"
+                  className="px-3.5 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold border border-rose-200 flex items-center gap-1.5 transition"
                 >
-                  취소
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>이 양식 삭제</span>
                 </button>
-                <button
-                  type="submit"
-                  className="px-5 py-2 rounded-xl bg-[#FF4B3E] hover:bg-[#FF3823] text-white font-black shadow-lg shadow-[#FF4B3E]/30"
-                >
-                  수정사항 저장하기
-                </button>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowEditTemplateModal(false);
+                      setEditingTemplate(null);
+                    }}
+                    className="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 font-bold hover:bg-slate-200 transition"
+                  >
+                    취소
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-5 py-2 rounded-xl bg-[#FF4B3E] hover:bg-[#FF3823] text-white font-black shadow-lg shadow-[#FF4B3E]/30 transition"
+                  >
+                    수정사항 저장하기
+                  </button>
+                </div>
               </div>
             </form>
           </div>

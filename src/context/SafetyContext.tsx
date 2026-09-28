@@ -145,7 +145,27 @@ export function SafetyProvider({ children }: { children: React.ReactNode }) {
   const [serverIp, setServerIp] = useState('10.210.115.120');
   const [tunnelUrl, setTunnelUrl] = useState<string | null>(null);
 
-  // Fetch Server Data (Single Central Source of Truth)
+  // Initial load from localStorage on client mount
+  useEffect(() => {
+    try {
+      const savedTemplates = localStorage.getItem('PRISM_TEMPLATES');
+      if (savedTemplates) {
+        const parsed = JSON.parse(savedTemplates);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setTemplates(parsed);
+        }
+      }
+      const savedOrg = localStorage.getItem('PRISM_ORG_DATA');
+      if (savedOrg) {
+        const parsedOrg = JSON.parse(savedOrg);
+        if (parsedOrg) {
+          setOrgData(parsedOrg);
+        }
+      }
+    } catch (e) {}
+  }, []);
+
+  // Fetch Server Data (Single Central Source of Truth with Smart Local Merging)
   const refreshData = useCallback(async () => {
     try {
       const res = await fetch('/api/safety-data');
@@ -157,12 +177,89 @@ export function SafetyProvider({ children }: { children: React.ReactNode }) {
         if (data.contractors) setContractors(data.contractors);
         if (data.tbmRecords) setTbmRecords(data.tbmRecords);
         if (data.incidents) setIncidents(data.incidents);
-        if (data.templates && data.templates.length > 0) setTemplates(data.templates);
         if (data.programs) setPrograms(data.programs);
         if (data.safetyLogs) setSafetyLogs(data.safetyLogs);
         if (data.calendarEvents) setCalendarEvents(data.calendarEvents);
         if (data.meetingRecords) setMeetingRecords(data.meetingRecords);
-        if (data.orgData) setOrgData(data.orgData);
+
+        // Smart templates merging
+        if (data.templates && data.templates.length > 0) {
+          try {
+            const localTmpl = localStorage.getItem('PRISM_TEMPLATES');
+            if (localTmpl) {
+              const parsedTmpl = JSON.parse(localTmpl);
+              if (Array.isArray(parsedTmpl) && parsedTmpl.length > 0) {
+                const serverIds = new Set(data.templates.map((t: any) => t.id));
+                const missingInServer = parsedTmpl.filter((t: any) => !serverIds.has(t.id));
+                if (missingInServer.length > 0) {
+                  const merged = [...data.templates, ...missingInServer];
+                  setTemplates(merged);
+                  localStorage.setItem('PRISM_TEMPLATES', JSON.stringify(merged));
+                  missingInServer.forEach((tmpl: any) => {
+                    fetch('/api/safety-data', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ action: 'add_template', payload: tmpl })
+                    }).catch(() => {});
+                  });
+                } else {
+                  setTemplates(data.templates);
+                }
+              } else {
+                setTemplates(data.templates);
+              }
+            } else {
+              setTemplates(data.templates);
+            }
+          } catch (e) {
+            setTemplates(data.templates);
+          }
+        }
+
+        // Smart orgData merging
+        if (data.orgData) {
+          try {
+            const localOrg = localStorage.getItem('PRISM_ORG_DATA');
+            if (localOrg) {
+              const parsedOrg = JSON.parse(localOrg);
+              if (parsedOrg && Array.isArray(parsedOrg.supervisors)) {
+                const serverSpIds = new Set((data.orgData.supervisors || []).map((s: any) => s.id));
+                const serverSpNames = new Set((data.orgData.supervisors || []).map((s: any) => s.name));
+                const missingInServer = parsedOrg.supervisors.filter((s: any) => !serverSpIds.has(s.id) && !serverSpNames.has(s.name));
+                
+                if (missingInServer.length > 0) {
+                  const mergedOrg = {
+                    ...data.orgData,
+                    ...parsedOrg,
+                    supervisors: [...(data.orgData.supervisors || []), ...missingInServer]
+                  };
+                  setOrgData(mergedOrg);
+                  localStorage.setItem('PRISM_ORG_DATA', JSON.stringify(mergedOrg));
+                  fetch('/api/safety-data', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'update_org_data', payload: mergedOrg })
+                  }).catch(() => {});
+                } else if (parsedOrg.supervisors.length >= (data.orgData.supervisors || []).length) {
+                  const mergedOrg = {
+                    ...data.orgData,
+                    ...parsedOrg
+                  };
+                  setOrgData(mergedOrg);
+                } else {
+                  setOrgData(data.orgData);
+                  localStorage.setItem('PRISM_ORG_DATA', JSON.stringify(data.orgData));
+                }
+              } else {
+                setOrgData(data.orgData);
+              }
+            } else {
+              setOrgData(data.orgData);
+            }
+          } catch (e) {
+            setOrgData(data.orgData);
+          }
+        }
       }
     } catch (e) {
       console.warn('API sync warning:', e);
@@ -378,7 +475,13 @@ export function SafetyProvider({ children }: { children: React.ReactNode }) {
       isCustom: true,
       createdAt: new Date().toISOString().replace('T', ' ').slice(0, 16)
     };
-    setTemplates(prev => [...prev, newTmpl]);
+    setTemplates(prev => {
+      const updated = [...prev, newTmpl];
+      try {
+        localStorage.setItem('PRISM_TEMPLATES', JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
 
     fetch('/api/safety-data', {
       method: 'POST',
@@ -388,9 +491,13 @@ export function SafetyProvider({ children }: { children: React.ReactNode }) {
   };
 
   const updateTemplate = (id: string, updatedData: Partial<WorkPermitTemplate>) => {
-    setTemplates(prev =>
-      prev.map(t => (t.id === id ? { ...t, ...updatedData } : t))
-    );
+    setTemplates(prev => {
+      const updated = prev.map(t => (t.id === id ? { ...t, ...updatedData } : t));
+      try {
+        localStorage.setItem('PRISM_TEMPLATES', JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
     fetch('/api/safety-data', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -399,7 +506,13 @@ export function SafetyProvider({ children }: { children: React.ReactNode }) {
   };
 
   const deleteTemplate = (id: string) => {
-    setTemplates(prev => prev.filter(t => t.id !== id));
+    setTemplates(prev => {
+      const updated = prev.filter(t => t.id !== id);
+      try {
+        localStorage.setItem('PRISM_TEMPLATES', JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
     fetch('/api/safety-data', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -408,7 +521,7 @@ export function SafetyProvider({ children }: { children: React.ReactNode }) {
   };
 
   // Worker Opinion Actions
-  const addWorkerOpinion = async (opinionData: Omit<WorkerOpinion, 'id' | 'opinionNumber' | 'createdAt' | 'status'>) => {
+  const addWorkerOpinion = (opinionData: Omit<WorkerOpinion, 'id' | 'opinionNumber' | 'createdAt' | 'status'>) => {
     const todayStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
     const seq = String(workerOpinions.length + 1).padStart(2, '0');
     const newOpinion: WorkerOpinion = {
@@ -421,16 +534,13 @@ export function SafetyProvider({ children }: { children: React.ReactNode }) {
 
     setWorkerOpinions(prev => [newOpinion, ...prev]);
 
-    try {
-      await fetch('/api/safety-data', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'add_opinion', payload: opinionData })
-      });
-      await refreshData();
-    } catch (e) {
-      console.error('Add opinion API error:', e);
-    }
+    fetch('/api/safety-data', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'add_opinion', payload: opinionData })
+    }).then(() => {
+      refreshData();
+    }).catch(e => console.error('Add opinion API error:', e));
 
     return newOpinion;
   };
@@ -580,7 +690,13 @@ export function SafetyProvider({ children }: { children: React.ReactNode }) {
 
   // Org Data Actions
   const updateOrgData = (data: any) => {
-    setOrgData((prev: any) => ({ ...prev, ...data }));
+    setOrgData((prev: any) => {
+      const updated = { ...prev, ...data };
+      try {
+        localStorage.setItem('PRISM_ORG_DATA', JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
     fetch('/api/safety-data', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
