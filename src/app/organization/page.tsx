@@ -574,8 +574,6 @@ export default function OrganizationPage() {
     }
   };
 
-  const totalCompanyMembers = 1 + 1 + supervisors.length;
-
   return (
     <div className="space-y-6 max-w-6xl mx-auto select-none">
       {/* Top Header */}
@@ -650,19 +648,6 @@ export default function OrganizationPage() {
       {/* ========================================================================= */}
       {activeMainTab === 'chart' && (
         <div className="space-y-6 animate-in fade-in-50 duration-300">
-          {/* Quick Stats Badges */}
-          <div className="flex flex-wrap items-center gap-2.5 text-xs font-bold">
-            <span className="px-3 py-1 rounded-full bg-[#FF4B3E]/10 text-[#FF4B3E] border border-[#FF4B3E]/30 font-black">
-              회사 {totalCompanyMembers}명
-            </span>
-            <span className="px-3 py-1 rounded-full bg-purple-100 text-purple-900 border border-purple-200 font-bold">
-              산업안전보건위원 {userMemberCount + workerMemberCount}명 (사측 {userMemberCount}명 · 노측 {workerMemberCount}명)
-            </span>
-            <span className="px-3 py-1 rounded-full bg-emerald-100 text-emerald-900 border border-emerald-200 font-bold">
-              협력업체 0명
-            </span>
-          </div>
-
           {/* Org Tree View */}
           <div className="bg-white border border-slate-200/90 rounded-3xl p-8 shadow-sm space-y-10 relative overflow-hidden">
             {/* Level 1: CSO Node */}
