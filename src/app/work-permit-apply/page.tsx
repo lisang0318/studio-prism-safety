@@ -515,7 +515,7 @@ function WorkPermitApplyContent() {
             )}
           </div>
 
-          {/* 3. Shooting Location (Free Text Input) */}
+          {/* 3. Shooting Location (Detailed Input) */}
           <div>
             <div className="flex items-center justify-between mb-1">
               <label className="block font-bold text-slate-700">3. 촬영 장소 (세트장명·위치) *</label>
@@ -524,13 +524,13 @@ function WorkPermitApplyContent() {
               ) : autoWeatherInfo ? (
                 <span className="text-[10px] text-emerald-600 font-bold">✓ 실시간 기상 연동 완료</span>
               ) : (
-                <span className="text-[10px] text-slate-500 font-medium">자유 텍스트 입력 시 실시간 날씨 자동 연동</span>
+                <span className="text-[10px] text-slate-500 font-medium">상세 위치 입력 시 실시간 날씨 자동 연동</span>
               )}
             </div>
             <input
               type="text"
               required
-              placeholder="촬영 장소를 자유롭게 입력하세요 (예: 강화 야외축구장, 상암 프리즘타워 3층, 탄현 세트장, 여의도 한강공원 등)"
+              placeholder="촬영 장소 및 상세 위치를 자세하게 작성해 주세요 (예: 강화 야외축구장, 상암 프리즘타워 3층, 탄현 세트장, 여의도 한강공원 등)"
               value={studioName}
               onChange={e => setStudioName(e.target.value)}
               className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-900 placeholder-slate-400 text-xs focus:border-[#FF4B3E] focus:bg-white focus:outline-none"
@@ -703,7 +703,7 @@ function WorkPermitApplyContent() {
               <input
                 type="text"
                 required
-                placeholder="작성자(제작진) 성명 (예: 김태호 PD, 조연출/FD)"
+                placeholder="작성자(제작진) 성명 (예: 홍길동 PD, 조연출/FD)"
                 value={managerName}
                 onChange={e => setManagerName(e.target.value)}
                 className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-900 placeholder-slate-400 text-xs font-bold focus:border-[#FF4B3E] focus:bg-white focus:outline-none"
