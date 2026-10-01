@@ -82,6 +82,30 @@ export function getDB(): DBStructure {
     const parsed = JSON.parse(content);
     if (!parsed.templates || parsed.templates.length === 0) {
       parsed.templates = INITIAL_TEMPLATES;
+    } else {
+      // Auto-deduplicate templates by id and title+workType
+      const seenIds = new Set<string>();
+      const seenCombos = new Set<string>();
+      const uniqueTemplates: WorkPermitTemplate[] = [];
+
+      for (const t of parsed.templates) {
+        if (!t) continue;
+        const cleanTitle = (t.title || '').trim().toLowerCase();
+        const cleanWorkType = (t.workType || '').trim().toLowerCase();
+        const comboKey = `${cleanTitle}:::${cleanWorkType}`;
+
+        if (!seenIds.has(t.id) && !seenCombos.has(comboKey)) {
+          seenIds.add(t.id);
+          seenCombos.add(comboKey);
+          uniqueTemplates.push(t);
+        }
+      }
+      if (uniqueTemplates.length !== parsed.templates.length) {
+        parsed.templates = uniqueTemplates;
+        try {
+          fs.writeFileSync(DB_FILE, JSON.stringify(parsed, null, 2), 'utf8');
+        } catch (e) {}
+      }
     }
     if (!parsed.workPermits) {
       parsed.workPermits = [];

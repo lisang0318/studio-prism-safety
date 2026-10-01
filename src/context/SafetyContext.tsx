@@ -51,6 +51,27 @@ export interface MeetingRecord {
   createdAt: string;
 }
 
+export function deduplicateTemplates(tmplList: WorkPermitTemplate[]): WorkPermitTemplate[] {
+  if (!Array.isArray(tmplList)) return [];
+  const seenIds = new Set<string>();
+  const seenCombos = new Set<string>();
+  const result: WorkPermitTemplate[] = [];
+
+  for (const t of tmplList) {
+    if (!t) continue;
+    const cleanTitle = (t.title || '').trim().toLowerCase();
+    const cleanWorkType = (t.workType || '').trim().toLowerCase();
+    const comboKey = `${cleanTitle}:::${cleanWorkType}`;
+
+    if (!seenIds.has(t.id) && !seenCombos.has(comboKey)) {
+      seenIds.add(t.id);
+      seenCombos.add(comboKey);
+      result.push(t);
+    }
+  }
+  return result;
+}
+
 interface SafetyContextType {
   workPermits: WorkPermit[];
   workerOpinions: WorkerOpinion[];
@@ -152,7 +173,9 @@ export function SafetyProvider({ children }: { children: React.ReactNode }) {
       if (savedTemplates) {
         const parsed = JSON.parse(savedTemplates);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          setTemplates(parsed);
+          const unique = deduplicateTemplates(parsed);
+          setTemplates(unique);
+          localStorage.setItem('PRISM_TEMPLATES', JSON.stringify(unique));
         }
       }
       const savedOrg = localStorage.getItem('PRISM_ORG_DATA');
@@ -182,35 +205,12 @@ export function SafetyProvider({ children }: { children: React.ReactNode }) {
         if (data.calendarEvents) setCalendarEvents(data.calendarEvents);
         if (data.meetingRecords) setMeetingRecords(data.meetingRecords);
 
-        // Smart templates merging
-        if (data.templates && data.templates.length > 0) {
+        // Smart templates sync (strictly deduplicated, single central source of truth)
+        if (data.templates && Array.isArray(data.templates) && data.templates.length > 0) {
           try {
-            const localTmpl = localStorage.getItem('PRISM_TEMPLATES');
-            if (localTmpl) {
-              const parsedTmpl = JSON.parse(localTmpl);
-              if (Array.isArray(parsedTmpl) && parsedTmpl.length > 0) {
-                const serverIds = new Set(data.templates.map((t: any) => t.id));
-                const missingInServer = parsedTmpl.filter((t: any) => !serverIds.has(t.id));
-                if (missingInServer.length > 0) {
-                  const merged = [...data.templates, ...missingInServer];
-                  setTemplates(merged);
-                  localStorage.setItem('PRISM_TEMPLATES', JSON.stringify(merged));
-                  missingInServer.forEach((tmpl: any) => {
-                    fetch('/api/safety-data', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ action: 'add_template', payload: tmpl })
-                    }).catch(() => {});
-                  });
-                } else {
-                  setTemplates(data.templates);
-                }
-              } else {
-                setTemplates(data.templates);
-              }
-            } else {
-              setTemplates(data.templates);
-            }
+            const uniqueTemplates = deduplicateTemplates(data.templates);
+            setTemplates(uniqueTemplates);
+            localStorage.setItem('PRISM_TEMPLATES', JSON.stringify(uniqueTemplates));
           } catch (e) {
             setTemplates(data.templates);
           }
@@ -472,8 +472,17 @@ export function SafetyProvider({ children }: { children: React.ReactNode }) {
       isCustom: true,
       createdAt: new Date().toISOString().replace('T', ' ').slice(0, 16)
     };
+
     setTemplates(prev => {
-      const updated = [...prev, newTmpl];
+      const cleanTitle = newTmpl.title.trim().toLowerCase();
+      const cleanWorkType = newTmpl.workType.trim().toLowerCase();
+      const exists = prev.some(
+        t => t.id === newTmpl.id ||
+             (t.title && t.title.trim().toLowerCase() === cleanTitle && 
+              t.workType && t.workType.trim().toLowerCase() === cleanWorkType)
+      );
+      if (exists) return prev;
+      const updated = deduplicateTemplates([...prev, newTmpl]);
       try {
         localStorage.setItem('PRISM_TEMPLATES', JSON.stringify(updated));
       } catch (e) {}
@@ -483,8 +492,10 @@ export function SafetyProvider({ children }: { children: React.ReactNode }) {
     fetch('/api/safety-data', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'add_template', payload: templateData })
-    }).catch(e => console.error('Add template API error:', e));
+      body: JSON.stringify({ action: 'add_template', payload: newTmpl })
+    })
+      .then(() => refreshData())
+      .catch(e => console.error('Add template API error:', e));
   };
 
   const updateTemplate = (id: string, updatedData: Partial<WorkPermitTemplate>) => {
@@ -499,12 +510,22 @@ export function SafetyProvider({ children }: { children: React.ReactNode }) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'update_template', payload: { id, ...updatedData } })
-    }).catch(e => console.error('Update template API error:', e));
+    })
+      .then(() => refreshData())
+      .catch(e => console.error('Update template API error:', e));
   };
 
   const deleteTemplate = (id: string) => {
     setTemplates(prev => {
-      const updated = prev.filter(t => t.id !== id);
+      const target = prev.find(t => t.id === id);
+      const updated = prev.filter(t => {
+        if (t.id === id) return false;
+        if (target && target.isCustom && target.title && target.workType &&
+            t.title?.trim() === target.title.trim() && t.workType?.trim() === target.workType.trim()) {
+          return false;
+        }
+        return true;
+      });
       try {
         localStorage.setItem('PRISM_TEMPLATES', JSON.stringify(updated));
       } catch (e) {}
@@ -514,7 +535,9 @@ export function SafetyProvider({ children }: { children: React.ReactNode }) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'delete_template', payload: { id } })
-    }).catch(e => console.error('Delete template API error:', e));
+    })
+      .then(() => refreshData())
+      .catch(e => console.error('Delete template API error:', e));
   };
 
   // Worker Opinion Actions

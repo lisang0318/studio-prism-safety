@@ -331,13 +331,36 @@ export async function POST(req: Request) {
     // 2. TEMPLATE ACTIONS
     // ==========================================
     if (action === 'add_template') {
+      const templateId = payload.id || `tmpl-${Date.now()}`;
+      const cleanTitle = (payload.title || '').trim().toLowerCase();
+      const cleanWorkType = (payload.workType || '').trim().toLowerCase();
+
+      if (!db.templates) db.templates = [];
+
+      // Check if template with same id OR (same title and workType) already exists
+      const existingIndex = db.templates.findIndex(
+        t => t.id === templateId || 
+             (t.title && t.title.trim().toLowerCase() === cleanTitle && 
+              t.workType && t.workType.trim().toLowerCase() === cleanWorkType)
+      );
+
+      if (existingIndex !== -1) {
+        // Prevent duplicate - update existing instead of creating a copy
+        db.templates[existingIndex] = {
+          ...db.templates[existingIndex],
+          ...payload,
+          id: db.templates[existingIndex].id
+        };
+        saveDB(db);
+        return NextResponse.json({ success: true, item: db.templates[existingIndex] });
+      }
+
       const newTemplate: WorkPermitTemplate = {
         ...payload,
-        id: `tmpl-${Date.now()}`,
+        id: templateId,
         isCustom: true,
-        createdAt: new Date().toISOString().replace('T', ' ').slice(0, 16)
+        createdAt: payload.createdAt || new Date().toISOString().replace('T', ' ').slice(0, 16)
       };
-      if (!db.templates) db.templates = [];
       db.templates.push(newTemplate);
       saveDB(db);
       return NextResponse.json({ success: true, item: newTemplate });
@@ -355,9 +378,42 @@ export async function POST(req: Request) {
 
     if (action === 'delete_template') {
       const { id } = payload;
-      db.templates = (db.templates || []).filter(t => t.id !== id);
+      const target = (db.templates || []).find(t => t.id === id);
+      db.templates = (db.templates || []).filter(t => {
+        if (t.id === id) return false;
+        // Also remove any accidental duplicate with same title and workType if custom
+        if (target && target.isCustom && target.title && target.workType &&
+            t.title?.trim() === target.title.trim() && t.workType?.trim() === target.workType.trim()) {
+          return false;
+        }
+        return true;
+      });
       saveDB(db);
       return NextResponse.json({ success: true });
+    }
+
+    if (action === 'deduplicate_templates') {
+      if (db.templates && db.templates.length > 0) {
+        const seenIds = new Set<string>();
+        const seenCombos = new Set<string>();
+        const uniqueTemplates: WorkPermitTemplate[] = [];
+
+        for (const t of db.templates) {
+          if (!t) continue;
+          const cleanTitle = (t.title || '').trim().toLowerCase();
+          const cleanWorkType = (t.workType || '').trim().toLowerCase();
+          const comboKey = `${cleanTitle}:::${cleanWorkType}`;
+
+          if (!seenIds.has(t.id) && !seenCombos.has(comboKey)) {
+            seenIds.add(t.id);
+            seenCombos.add(comboKey);
+            uniqueTemplates.push(t);
+          }
+        }
+        db.templates = uniqueTemplates;
+        saveDB(db);
+      }
+      return NextResponse.json({ success: true, templates: db.templates });
     }
 
     // ==========================================
