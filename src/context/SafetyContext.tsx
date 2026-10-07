@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import {
   WorkPermit,
   WorkerOpinion,
@@ -166,6 +166,9 @@ export function SafetyProvider({ children }: { children: React.ReactNode }) {
   const [serverIp, setServerIp] = useState('10.210.115.120');
   const [tunnelUrl, setTunnelUrl] = useState<string | null>(null);
 
+  // Mutation Guard: Prevents background polling from overwriting unsaved or newly saved edits
+  const lastMutationTimeRef = useRef<number>(0);
+
   // Initial load from localStorage on client mount
   useEffect(() => {
     try {
@@ -188,11 +191,25 @@ export function SafetyProvider({ children }: { children: React.ReactNode }) {
     } catch (e) {}
   }, []);
 
-  // Fetch Server Data (Single Central Source of Truth with Smart Local Merging)
+  // Fetch Server Data (Single Central Source of Truth with Race-Condition Guard)
   const refreshData = useCallback(async () => {
+    // If a user mutation occurred within the last 4 seconds, skip background overwrite
+    if (Date.now() - lastMutationTimeRef.current < 4000) {
+      return;
+    }
     try {
-      const res = await fetch('/api/safety-data');
+      const res = await fetch(`/api/safety-data?t=${Date.now()}`, {
+        cache: 'no-store',
+        headers: {
+          'Pragma': 'no-cache',
+          'Cache-Control': 'no-cache'
+        }
+      });
       if (res.ok) {
+        // Re-check after awaiting fetch to prevent race conditions from in-flight requests
+        if (Date.now() - lastMutationTimeRef.current < 4000) {
+          return;
+        }
         const data = await res.json();
         if (data.workPermits) setWorkPermits(data.workPermits);
         if (data.workerOpinions) setWorkerOpinions(data.workerOpinions);
@@ -216,46 +233,12 @@ export function SafetyProvider({ children }: { children: React.ReactNode }) {
           }
         }
 
-        // Smart orgData merging
+        // Central OrgData sync
         if (data.orgData) {
+          setOrgData(data.orgData);
           try {
-            const localOrg = localStorage.getItem('PRISM_ORG_DATA');
-            if (localOrg) {
-              const parsedOrg = JSON.parse(localOrg);
-              if (parsedOrg) {
-                const serverSpIds = new Set((data.orgData.supervisors || []).map((s: any) => s.id));
-                const serverSpNames = new Set((data.orgData.supervisors || []).map((s: any) => s.name));
-                const missingInServer = (parsedOrg.supervisors || []).filter((s: any) => !serverSpIds.has(s.id) && !serverSpNames.has(s.name));
-                
-                const mergedOrg = {
-                  ...data.orgData,
-                  ...parsedOrg,
-                  supervisors: missingInServer.length > 0
-                    ? [...(data.orgData.supervisors || []), ...missingInServer]
-                    : (parsedOrg.supervisors && parsedOrg.supervisors.length > 0 ? parsedOrg.supervisors : data.orgData.supervisors)
-                };
-                setOrgData(mergedOrg);
-                localStorage.setItem('PRISM_ORG_DATA', JSON.stringify(mergedOrg));
-                if (
-                  missingInServer.length > 0 ||
-                  (parsedOrg.userMemberCount !== undefined && parsedOrg.userMemberCount !== data.orgData.userMemberCount) ||
-                  (parsedOrg.workerMemberCount !== undefined && parsedOrg.workerMemberCount !== data.orgData.workerMemberCount)
-                ) {
-                  fetch('/api/safety-data', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'update_org_data', payload: mergedOrg })
-                  }).catch(() => {});
-                }
-              } else {
-                setOrgData(data.orgData);
-              }
-            } else {
-              setOrgData(data.orgData);
-            }
-          } catch (e) {
-            setOrgData(data.orgData);
-          }
+            localStorage.setItem('PRISM_ORG_DATA', JSON.stringify(data.orgData));
+          } catch (e) {}
         }
       }
     } catch (e) {
@@ -289,6 +272,7 @@ export function SafetyProvider({ children }: { children: React.ReactNode }) {
 
   // Program Actions
   const addProgram = async (programData: Omit<ProgramItem, 'id' | 'monthlyPermits'>) => {
+    lastMutationTimeRef.current = Date.now();
     const newMonths: MonthlyPermit[] = Array.from({ length: 12 }, (_, i) => ({
       month: i + 1,
       monthLabel: `${i + 1}월`,
@@ -301,43 +285,58 @@ export function SafetyProvider({ children }: { children: React.ReactNode }) {
     };
     setPrograms(prev => [newProg, ...prev]);
     try {
-      await fetch('/api/safety-data', {
+      const res = await fetch('/api/safety-data', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'add_program', payload: programData })
       });
+      if (res.ok) {
+        const json = await res.json();
+        if (json.programs) setPrograms(json.programs);
+      }
     } catch (e) {
       console.error(e);
     }
   };
 
   const updateProgram = async (id: string, updatedData: Partial<ProgramItem>) => {
+    lastMutationTimeRef.current = Date.now();
     setPrograms(prev => prev.map(p => (p.id === id ? { ...p, ...updatedData } : p)));
     try {
-      await fetch('/api/safety-data', {
+      const res = await fetch('/api/safety-data', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'update_program', payload: { id, ...updatedData } })
       });
+      if (res.ok) {
+        const json = await res.json();
+        if (json.programs) setPrograms(json.programs);
+      }
     } catch (e) {
       console.error(e);
     }
   };
 
   const deleteProgram = async (id: string) => {
+    lastMutationTimeRef.current = Date.now();
     setPrograms(prev => prev.filter(p => p.id !== id));
     try {
-      await fetch('/api/safety-data', {
+      const res = await fetch('/api/safety-data', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'delete_program', payload: { id } })
       });
+      if (res.ok) {
+        const json = await res.json();
+        if (json.programs) setPrograms(json.programs);
+      }
     } catch (e) {
       console.error(e);
     }
   };
 
   const updateProgramMonthPermit = async (progId: string, month: number, permitData: Partial<MonthlyPermit>) => {
+    lastMutationTimeRef.current = Date.now();
     setPrograms(prev =>
       prev.map(p => {
         if (p.id === progId) {
@@ -348,11 +347,15 @@ export function SafetyProvider({ children }: { children: React.ReactNode }) {
       })
     );
     try {
-      await fetch('/api/safety-data', {
+      const res = await fetch('/api/safety-data', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'update_program_month', payload: { progId, month, permitData } })
       });
+      if (res.ok) {
+        const json = await res.json();
+        if (json.programs) setPrograms(json.programs);
+      }
     } catch (e) {
       console.error(e);
     }
@@ -360,6 +363,7 @@ export function SafetyProvider({ children }: { children: React.ReactNode }) {
 
   // Work Permit Actions
   const addWorkPermit = (permitData: Omit<WorkPermit, 'id' | 'permitNumber' | 'createdAt' | 'updatedAt'>) => {
+    lastMutationTimeRef.current = Date.now();
     const todayStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
     const seq = String(workPermits.length + 1).padStart(2, '0');
     const newPermit: WorkPermit = {
@@ -381,32 +385,49 @@ export function SafetyProvider({ children }: { children: React.ReactNode }) {
     return newPermit;
   };
 
-  const updateWorkPermit = (id: string, data: Partial<WorkPermit>) => {
+  const updateWorkPermit = async (id: string, data: Partial<WorkPermit>) => {
+    lastMutationTimeRef.current = Date.now();
     setWorkPermits(prev =>
       prev.map(p => (p.id === id ? { ...p, ...data, updatedAt: new Date().toISOString().replace('T', ' ').slice(0, 16) } : p))
     );
-    fetch('/api/safety-data', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'update_permit', payload: { id, ...data } })
-    }).catch(e => console.error('Update permit API error:', e));
+    try {
+      const res = await fetch('/api/safety-data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'update_permit', payload: { id, ...data } })
+      });
+      if (res.ok) {
+        const json = await res.json();
+        if (json.item) {
+          setWorkPermits(prev => prev.map(p => (p.id === id ? { ...p, ...json.item } : p)));
+        }
+      }
+    } catch (e) {
+      console.error('Update permit API error:', e);
+    }
   };
 
-  const deleteWorkPermit = (id: string) => {
+  const deleteWorkPermit = async (id: string) => {
+    lastMutationTimeRef.current = Date.now();
     setWorkPermits(prev => prev.filter(p => p.id !== id));
-    fetch('/api/safety-data', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'delete_permit', payload: { id } })
-    }).catch(e => console.error('Delete permit API error:', e));
+    try {
+      await fetch('/api/safety-data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'delete_permit', payload: { id } })
+      });
+    } catch (e) {
+      console.error('Delete permit API error:', e);
+    }
   };
 
-  const approveWorkPermit = (
+  const approveWorkPermit = async (
     id: string,
     safetyOfficerName: string,
     digitalSignature: string,
     officerSignature?: string
   ) => {
+    lastMutationTimeRef.current = Date.now();
     setWorkPermits(prev =>
       prev.map(p =>
         p.id === id
@@ -423,17 +444,22 @@ export function SafetyProvider({ children }: { children: React.ReactNode }) {
       )
     );
 
-    fetch('/api/safety-data', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        action: 'approve_permit',
-        payload: { id, safetyOfficerName, digitalSignature, officerSignature }
-      })
-    }).catch(e => console.error('Approve permit API error:', e));
+    try {
+      await fetch('/api/safety-data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'approve_permit',
+          payload: { id, safetyOfficerName, digitalSignature, officerSignature }
+        })
+      });
+    } catch (e) {
+      console.error('Approve permit API error:', e);
+    }
   };
 
-  const rejectWorkPermit = (id: string, reason: string) => {
+  const rejectWorkPermit = async (id: string, reason: string) => {
+    lastMutationTimeRef.current = Date.now();
     setWorkPermits(prev =>
       prev.map(p =>
         p.id === id
@@ -446,26 +472,36 @@ export function SafetyProvider({ children }: { children: React.ReactNode }) {
           : p
       )
     );
-    fetch('/api/safety-data', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'reject_permit', payload: { id, reason } })
-    }).catch(e => console.error('Reject permit API error:', e));
+    try {
+      await fetch('/api/safety-data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'reject_permit', payload: { id, reason } })
+      });
+    } catch (e) {
+      console.error('Reject permit API error:', e);
+    }
   };
 
-  const updatePermitStatus = (id: string, status: PermitStatus) => {
+  const updatePermitStatus = async (id: string, status: PermitStatus) => {
+    lastMutationTimeRef.current = Date.now();
     setWorkPermits(prev =>
       prev.map(p => (p.id === id ? { ...p, status, updatedAt: new Date().toISOString().replace('T', ' ').slice(0, 16) } : p))
     );
-    fetch('/api/safety-data', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'update_permit_status', payload: { id, status } })
-    }).catch(e => console.error('Update permit status API error:', e));
+    try {
+      await fetch('/api/safety-data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'update_permit_status', payload: { id, status } })
+      });
+    } catch (e) {
+      console.error('Update permit status API error:', e);
+    }
   };
 
   // Template Actions
-  const addTemplate = (templateData: Omit<WorkPermitTemplate, 'id' | 'createdAt' | 'isCustom'>) => {
+  const addTemplate = async (templateData: Omit<WorkPermitTemplate, 'id' | 'createdAt' | 'isCustom'>) => {
+    lastMutationTimeRef.current = Date.now();
     const newTmpl: WorkPermitTemplate = {
       ...templateData,
       id: `tmpl-${Date.now()}`,
@@ -489,16 +525,29 @@ export function SafetyProvider({ children }: { children: React.ReactNode }) {
       return updated;
     });
 
-    fetch('/api/safety-data', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'add_template', payload: newTmpl })
-    })
-      .then(() => refreshData())
-      .catch(e => console.error('Add template API error:', e));
+    try {
+      const res = await fetch('/api/safety-data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'add_template', payload: newTmpl })
+      });
+      if (res.ok) {
+        const json = await res.json();
+        if (json.templates) {
+          const unique = deduplicateTemplates(json.templates);
+          setTemplates(unique);
+          try {
+            localStorage.setItem('PRISM_TEMPLATES', JSON.stringify(unique));
+          } catch (e) {}
+        }
+      }
+    } catch (e) {
+      console.error('Add template API error:', e);
+    }
   };
 
-  const updateTemplate = (id: string, updatedData: Partial<WorkPermitTemplate>) => {
+  const updateTemplate = async (id: string, updatedData: Partial<WorkPermitTemplate>) => {
+    lastMutationTimeRef.current = Date.now();
     setTemplates(prev => {
       const updated = prev.map(t => (t.id === id ? { ...t, ...updatedData } : t));
       try {
@@ -506,16 +555,29 @@ export function SafetyProvider({ children }: { children: React.ReactNode }) {
       } catch (e) {}
       return updated;
     });
-    fetch('/api/safety-data', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'update_template', payload: { id, ...updatedData } })
-    })
-      .then(() => refreshData())
-      .catch(e => console.error('Update template API error:', e));
+    try {
+      const res = await fetch('/api/safety-data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'update_template', payload: { id, ...updatedData } })
+      });
+      if (res.ok) {
+        const json = await res.json();
+        if (json.templates) {
+          const unique = deduplicateTemplates(json.templates);
+          setTemplates(unique);
+          try {
+            localStorage.setItem('PRISM_TEMPLATES', JSON.stringify(unique));
+          } catch (e) {}
+        }
+      }
+    } catch (e) {
+      console.error('Update template API error:', e);
+    }
   };
 
-  const deleteTemplate = (id: string) => {
+  const deleteTemplate = async (id: string) => {
+    lastMutationTimeRef.current = Date.now();
     setTemplates(prev => {
       const target = prev.find(t => t.id === id);
       const updated = prev.filter(t => {
@@ -531,17 +593,30 @@ export function SafetyProvider({ children }: { children: React.ReactNode }) {
       } catch (e) {}
       return updated;
     });
-    fetch('/api/safety-data', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'delete_template', payload: { id } })
-    })
-      .then(() => refreshData())
-      .catch(e => console.error('Delete template API error:', e));
+    try {
+      const res = await fetch('/api/safety-data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'delete_template', payload: { id } })
+      });
+      if (res.ok) {
+        const json = await res.json();
+        if (json.templates) {
+          const unique = deduplicateTemplates(json.templates);
+          setTemplates(unique);
+          try {
+            localStorage.setItem('PRISM_TEMPLATES', JSON.stringify(unique));
+          } catch (e) {}
+        }
+      }
+    } catch (e) {
+      console.error('Delete template API error:', e);
+    }
   };
 
   // Worker Opinion Actions
   const addWorkerOpinion = (opinionData: Omit<WorkerOpinion, 'id' | 'opinionNumber' | 'createdAt' | 'status'>) => {
+    lastMutationTimeRef.current = Date.now();
     const todayStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
     const seq = String(workerOpinions.length + 1).padStart(2, '0');
     const newOpinion: WorkerOpinion = {
@@ -558,40 +633,49 @@ export function SafetyProvider({ children }: { children: React.ReactNode }) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'add_opinion', payload: opinionData })
-    }).then(() => {
-      refreshData();
     }).catch(e => console.error('Add opinion API error:', e));
 
     return newOpinion;
   };
 
-  const deleteWorkerOpinion = (id: string) => {
+  const deleteWorkerOpinion = async (id: string) => {
+    lastMutationTimeRef.current = Date.now();
     setWorkerOpinions(prev => prev.filter(o => o.id !== id));
-    fetch('/api/safety-data', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'delete_opinion', payload: { id } })
-    }).catch(e => console.error('Delete opinion API error:', e));
+    try {
+      await fetch('/api/safety-data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'delete_opinion', payload: { id } })
+      });
+    } catch (e) {
+      console.error('Delete opinion API error:', e);
+    }
   };
 
-  const updateOpinionStatus = (id: string, status: OpinionStatus) => {
+  const updateOpinionStatus = async (id: string, status: OpinionStatus) => {
+    lastMutationTimeRef.current = Date.now();
     setWorkerOpinions(prev =>
       prev.map(o => (o.id === id ? { ...o, status } : o))
     );
-    fetch('/api/safety-data', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'update_opinion_status', payload: { id, status } })
-    }).catch(e => console.error('Update opinion status API error:', e));
+    try {
+      await fetch('/api/safety-data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'update_opinion_status', payload: { id, status } })
+      });
+    } catch (e) {
+      console.error('Update opinion status API error:', e);
+    }
   };
 
-  const resolveWorkerOpinion = (
+  const resolveWorkerOpinion = async (
     id: string,
     actionContent: string,
     actionPhotos: string[],
     actionOfficer: string,
     officerSignature?: string
   ) => {
+    lastMutationTimeRef.current = Date.now();
     setWorkerOpinions(prev =>
       prev.map(o =>
         o.id === id
@@ -608,18 +692,23 @@ export function SafetyProvider({ children }: { children: React.ReactNode }) {
       )
     );
 
-    fetch('/api/safety-data', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        action: 'resolve_opinion',
-        payload: { id, actionContent, actionPhotos, actionOfficer, officerSignature }
-      })
-    }).catch(e => console.error('Resolve opinion API error:', e));
+    try {
+      await fetch('/api/safety-data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'resolve_opinion',
+          payload: { id, actionContent, actionPhotos, actionOfficer, officerSignature }
+        })
+      });
+    } catch (e) {
+      console.error('Resolve opinion API error:', e);
+    }
   };
 
   // Safety Logs Actions
-  const addSafetyLog = (logData: Omit<DailySafetyLog, 'id' | 'createdAt'>) => {
+  const addSafetyLog = async (logData: Omit<DailySafetyLog, 'id' | 'createdAt'>) => {
+    lastMutationTimeRef.current = Date.now();
     const newLog: DailySafetyLog = {
       ...logData,
       id: `log-${Date.now()}`,
@@ -627,89 +716,153 @@ export function SafetyProvider({ children }: { children: React.ReactNode }) {
     };
     setSafetyLogs(prev => [newLog, ...prev]);
 
-    fetch('/api/safety-data', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'add_safety_log', payload: logData })
-    }).catch(e => console.error('Add safety log API error:', e));
+    try {
+      const res = await fetch('/api/safety-data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'add_safety_log', payload: logData })
+      });
+      if (res.ok) {
+        const json = await res.json();
+        if (json.safetyLogs) setSafetyLogs(json.safetyLogs);
+      }
+    } catch (e) {
+      console.error('Add safety log API error:', e);
+    }
   };
 
-  const updateSafetyLog = (id: string, updatedData: Partial<DailySafetyLog>) => {
+  const updateSafetyLog = async (id: string, updatedData: Partial<DailySafetyLog>) => {
+    lastMutationTimeRef.current = Date.now();
     setSafetyLogs(prev => prev.map(l => (l.id === id ? { ...l, ...updatedData } : l)));
-    fetch('/api/safety-data', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'update_safety_log', payload: { id, ...updatedData } })
-    }).catch(e => console.error('Update safety log API error:', e));
+    try {
+      const res = await fetch('/api/safety-data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'update_safety_log', payload: { id, ...updatedData } })
+      });
+      if (res.ok) {
+        const json = await res.json();
+        if (json.safetyLogs) setSafetyLogs(json.safetyLogs);
+      }
+    } catch (e) {
+      console.error('Update safety log API error:', e);
+    }
   };
 
-  const deleteSafetyLog = (id: string) => {
+  const deleteSafetyLog = async (id: string) => {
+    lastMutationTimeRef.current = Date.now();
     setSafetyLogs(prev => prev.filter(l => l.id !== id));
-    fetch('/api/safety-data', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'delete_safety_log', payload: { id } })
-    }).catch(e => console.error('Delete safety log API error:', e));
+    try {
+      const res = await fetch('/api/safety-data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'delete_safety_log', payload: { id } })
+      });
+      if (res.ok) {
+        const json = await res.json();
+        if (json.safetyLogs) setSafetyLogs(json.safetyLogs);
+      }
+    } catch (e) {
+      console.error('Delete safety log API error:', e);
+    }
   };
 
   // Calendar Events Actions
-  const addCalendarEvent = (eventData: Omit<CalendarEvent, 'id'>) => {
+  const addCalendarEvent = async (eventData: Omit<CalendarEvent, 'id'>) => {
+    lastMutationTimeRef.current = Date.now();
     const newEvent: CalendarEvent = {
       ...eventData,
       id: `e-${Date.now()}`
     };
     setCalendarEvents(prev => [newEvent, ...prev]);
-    fetch('/api/safety-data', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'add_calendar_event', payload: eventData })
-    }).catch(e => console.error('Add calendar event API error:', e));
+    try {
+      const res = await fetch('/api/safety-data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'add_calendar_event', payload: eventData })
+      });
+      if (res.ok) {
+        const json = await res.json();
+        if (json.calendarEvents) setCalendarEvents(json.calendarEvents);
+      }
+    } catch (e) {
+      console.error('Add calendar event API error:', e);
+    }
   };
 
-  const updateCalendarEvent = (id: string, updatedData: Partial<CalendarEvent>) => {
+  const updateCalendarEvent = async (id: string, updatedData: Partial<CalendarEvent>) => {
+    lastMutationTimeRef.current = Date.now();
     setCalendarEvents(prev => prev.map(e => (e.id === id ? { ...e, ...updatedData } : e)));
-    fetch('/api/safety-data', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'update_calendar_event', payload: { id, ...updatedData } })
-    }).catch(e => console.error('Update calendar event API error:', e));
+    try {
+      const res = await fetch('/api/safety-data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'update_calendar_event', payload: { id, ...updatedData } })
+      });
+      if (res.ok) {
+        const json = await res.json();
+        if (json.calendarEvents) setCalendarEvents(json.calendarEvents);
+      }
+    } catch (e) {
+      console.error('Update calendar event API error:', e);
+    }
   };
 
-  const deleteCalendarEvent = (id: string) => {
+  const deleteCalendarEvent = async (id: string) => {
+    lastMutationTimeRef.current = Date.now();
     setCalendarEvents(prev => prev.filter(e => e.id !== id));
-    fetch('/api/safety-data', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'delete_calendar_event', payload: { id } })
-    }).catch(e => console.error('Delete calendar event API error:', e));
+    try {
+      const res = await fetch('/api/safety-data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'delete_calendar_event', payload: { id } })
+      });
+      if (res.ok) {
+        const json = await res.json();
+        if (json.calendarEvents) setCalendarEvents(json.calendarEvents);
+      }
+    } catch (e) {
+      console.error('Delete calendar event API error:', e);
+    }
   };
 
   // Meeting Minutes Actions
-  const addMeetingRecord = (meetingData: Omit<MeetingRecord, 'id' | 'createdAt'>) => {
+  const addMeetingRecord = async (meetingData: Omit<MeetingRecord, 'id' | 'createdAt'>) => {
+    lastMutationTimeRef.current = Date.now();
     const newMeeting: MeetingRecord = {
       ...meetingData,
       id: `meet-${Date.now()}`,
       createdAt: new Date().toISOString().replace('T', ' ').slice(0, 16)
     };
     setMeetingRecords(prev => [newMeeting, ...prev]);
-    fetch('/api/safety-data', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'add_meeting', payload: meetingData })
-    }).catch(e => console.error('Add meeting record API error:', e));
+    try {
+      await fetch('/api/safety-data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'add_meeting', payload: meetingData })
+      });
+    } catch (e) {
+      console.error('Add meeting record API error:', e);
+    }
   };
 
-  const deleteMeetingRecord = (id: string) => {
+  const deleteMeetingRecord = async (id: string) => {
+    lastMutationTimeRef.current = Date.now();
     setMeetingRecords(prev => prev.filter(m => m.id !== id));
-    fetch('/api/safety-data', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'delete_meeting', payload: { id } })
-    }).catch(e => console.error('Delete meeting record API error:', e));
+    try {
+      await fetch('/api/safety-data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'delete_meeting', payload: { id } })
+      });
+    } catch (e) {
+      console.error('Delete meeting record API error:', e);
+    }
   };
 
   // Org Data Actions
-  const updateOrgData = (data: any) => {
+  const updateOrgData = async (data: any) => {
+    lastMutationTimeRef.current = Date.now();
     setOrgData((prev: any) => {
       const updated = { ...prev, ...data };
       try {
@@ -717,15 +870,29 @@ export function SafetyProvider({ children }: { children: React.ReactNode }) {
       } catch (e) {}
       return updated;
     });
-    fetch('/api/safety-data', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'update_org_data', payload: data })
-    }).catch(e => console.error('Update org data API error:', e));
+    try {
+      const res = await fetch('/api/safety-data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'update_org_data', payload: data })
+      });
+      if (res.ok) {
+        const json = await res.json();
+        if (json.orgData) {
+          setOrgData(json.orgData);
+          try {
+            localStorage.setItem('PRISM_ORG_DATA', JSON.stringify(json.orgData));
+          } catch (e) {}
+        }
+      }
+    } catch (e) {
+      console.error('Update org data API error:', e);
+    }
   };
 
   // Inspection, TBM, Incident, Contractor
-  const addSafetyInspection = (inspectionData: Omit<SafetyInspection, 'id' | 'inspectionNumber' | 'createdAt'>) => {
+  const addSafetyInspection = async (inspectionData: Omit<SafetyInspection, 'id' | 'inspectionNumber' | 'createdAt'>) => {
+    lastMutationTimeRef.current = Date.now();
     const todayStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
     const seq = String(inspections.length + 1).padStart(2, '0');
     const newInsp: SafetyInspection = {
@@ -735,14 +902,19 @@ export function SafetyProvider({ children }: { children: React.ReactNode }) {
       createdAt: new Date().toISOString().replace('T', ' ').slice(0, 16)
     };
     setInspections(prev => [newInsp, ...prev]);
-    fetch('/api/safety-data', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'add_inspection', payload: newInsp })
-    }).catch(e => console.error(e));
+    try {
+      await fetch('/api/safety-data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'add_inspection', payload: newInsp })
+      });
+    } catch (e) {
+      console.error(e);
+    }
   };
 
-  const addTBMRecord = (tbmData: Omit<TBMRecord, 'id' | 'tbmNumber' | 'createdAt'>) => {
+  const addTBMRecord = async (tbmData: Omit<TBMRecord, 'id' | 'tbmNumber' | 'createdAt'>) => {
+    lastMutationTimeRef.current = Date.now();
     const todayStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
     const seq = String(tbmRecords.length + 1).padStart(2, '0');
     const newTBM: TBMRecord = {
@@ -752,32 +924,59 @@ export function SafetyProvider({ children }: { children: React.ReactNode }) {
       createdAt: new Date().toISOString().replace('T', ' ').slice(0, 16)
     };
     setTbmRecords(prev => [newTBM, ...prev]);
-    fetch('/api/safety-data', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'add_tbm', payload: tbmData })
-    }).catch(e => console.error(e));
+    try {
+      const res = await fetch('/api/safety-data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'add_tbm', payload: tbmData })
+      });
+      if (res.ok) {
+        const json = await res.json();
+        if (json.tbmRecords) setTbmRecords(json.tbmRecords);
+      }
+    } catch (e) {
+      console.error(e);
+    }
   };
 
-  const updateTBMRecord = (id: string, updatedData: Partial<TBMRecord>) => {
+  const updateTBMRecord = async (id: string, updatedData: Partial<TBMRecord>) => {
+    lastMutationTimeRef.current = Date.now();
     setTbmRecords(prev => prev.map(t => (t.id === id ? { ...t, ...updatedData } : t)));
-    fetch('/api/safety-data', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'update_tbm', payload: { id, ...updatedData } })
-    }).catch(e => console.error(e));
+    try {
+      const res = await fetch('/api/safety-data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'update_tbm', payload: { id, ...updatedData } })
+      });
+      if (res.ok) {
+        const json = await res.json();
+        if (json.tbmRecords) setTbmRecords(json.tbmRecords);
+      }
+    } catch (e) {
+      console.error(e);
+    }
   };
 
-  const deleteTBMRecord = (id: string) => {
+  const deleteTBMRecord = async (id: string) => {
+    lastMutationTimeRef.current = Date.now();
     setTbmRecords(prev => prev.filter(t => t.id !== id));
-    fetch('/api/safety-data', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'delete_tbm', payload: { id } })
-    }).catch(e => console.error(e));
+    try {
+      const res = await fetch('/api/safety-data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'delete_tbm', payload: { id } })
+      });
+      if (res.ok) {
+        const json = await res.json();
+        if (json.tbmRecords) setTbmRecords(json.tbmRecords);
+      }
+    } catch (e) {
+      console.error(e);
+    }
   };
 
-  const addIncidentRecord = (incidentData: Omit<IncidentRecord, 'id' | 'incidentNumber' | 'createdAt'>) => {
+  const addIncidentRecord = async (incidentData: Omit<IncidentRecord, 'id' | 'incidentNumber' | 'createdAt'>) => {
+    lastMutationTimeRef.current = Date.now();
     const todayStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
     const seq = String(incidents.length + 1).padStart(2, '0');
     const newInc: IncidentRecord = {
@@ -787,24 +986,33 @@ export function SafetyProvider({ children }: { children: React.ReactNode }) {
       createdAt: new Date().toISOString().replace('T', ' ').slice(0, 16)
     };
     setIncidents(prev => [newInc, ...prev]);
-    fetch('/api/safety-data', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'add_incident', payload: newInc })
-    }).catch(e => console.error(e));
+    try {
+      await fetch('/api/safety-data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'add_incident', payload: newInc })
+      });
+    } catch (e) {
+      console.error(e);
+    }
   };
 
-  const addContractor = (contractorData: Omit<Contractor, 'id'>) => {
+  const addContractor = async (contractorData: Omit<Contractor, 'id'>) => {
+    lastMutationTimeRef.current = Date.now();
     const newContractor: Contractor = {
       ...contractorData,
       id: `con-${Date.now()}`
     };
     setContractors(prev => [newContractor, ...prev]);
-    fetch('/api/safety-data', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'add_contractor', payload: newContractor })
-    }).catch(e => console.error(e));
+    try {
+      await fetch('/api/safety-data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'add_contractor', payload: newContractor })
+      });
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   const resetData = () => {

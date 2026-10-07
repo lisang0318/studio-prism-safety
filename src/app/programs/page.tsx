@@ -41,7 +41,8 @@ export default function ProgramsPage() {
     addProgram,
     updateProgram,
     deleteProgram,
-    updateProgramMonthPermit
+    updateProgramMonthPermit,
+    updateWorkPermit
   } = useSafety();
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -69,8 +70,15 @@ export default function ProgramsPage() {
   // 3. PDF Matrix Modal
   const [showPdfModal, setShowPdfModal] = useState(false);
 
-  // Dynamic monthly permit lookup that checks registered workPermits first
+  // Dynamic monthly permit lookup that checks customized matrix cells first, then active permits
   const getDynamicMonthlyPermit = (prog: ProgramItem, month: number): MonthlyPermit => {
+    const manual = prog.monthlyPermits?.find(m => m.month === month);
+
+    // If there is an explicitly registered / edited monthly permit in this cell, prioritize it!
+    if (manual && manual.status && manual.status !== '미발행') {
+      return manual;
+    }
+
     const cleanProg = prog.title.replace(/[\[\]\s]/g, '').toLowerCase();
     const matchingPermits = (workPermits || []).filter(p => {
       if (!p.productionName) return false;
@@ -95,7 +103,6 @@ export default function ProgramsPage() {
       };
     }
 
-    const manual = prog.monthlyPermits?.find(m => m.month === month);
     return manual || { month, monthLabel: `${month}월`, status: '미발행' };
   };
 
@@ -184,6 +191,27 @@ export default function ProgramsPage() {
       date: cellDate,
       officer: cellOfficer
     });
+
+    // Also synchronize matching active workPermit if one exists
+    const cleanProg = selectedCell.progTitle.replace(/[\[\]\s]/g, '').toLowerCase();
+    const matchingPermit = (workPermits || []).find(p => {
+      if (!p.productionName) return false;
+      const cleanP = p.productionName.replace(/[\[\]\s]/g, '').toLowerCase();
+      const isMatch = cleanP.includes(cleanProg) || cleanProg.includes(cleanP);
+      if (!isMatch) return false;
+      const pDate = p.startDate ? new Date(p.startDate) : new Date(p.createdAt);
+      return (pDate.getMonth() + 1) === selectedCell.permit.month;
+    });
+
+    if (matchingPermit) {
+      updateWorkPermit(matchingPermit.id, {
+        title: cellTitle.trim(),
+        workType: cellWorkType,
+        safetyOfficerName: cellOfficer,
+        startDate: cellDate,
+        status: cellStatus === '진행중' ? '작업진행중' : (cellStatus as any)
+      });
+    }
 
     alert(`${selectedCell.progTitle} ${selectedCell.permit.monthLabel} 작업허가 상태가 업데이트되었습니다.`);
     setSelectedCell(null);

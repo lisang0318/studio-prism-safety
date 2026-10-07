@@ -2,9 +2,18 @@ import { NextResponse } from 'next/server';
 import { getDB, saveDB } from '@/lib/db';
 import { WorkPermit, WorkerOpinion, WorkPermitTemplate, DailySafetyLog } from '@/types';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export async function GET() {
   const db = getDB();
-  return NextResponse.json(db);
+  return NextResponse.json(db, {
+    headers: {
+      'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0',
+      'Pragma': 'no-cache',
+      'Expires': '0'
+    }
+  });
 }
 
 export async function POST(req: Request) {
@@ -369,11 +378,16 @@ export async function POST(req: Request) {
     if (action === 'update_template') {
       const { id, ...updatedFields } = payload;
       if (!db.templates) db.templates = [];
-      db.templates = db.templates.map(t =>
-        t.id === id ? { ...t, ...updatedFields } : t
-      );
+      let updatedTemplate = null;
+      db.templates = db.templates.map(t => {
+        if (t.id === id) {
+          updatedTemplate = { ...t, ...updatedFields };
+          return updatedTemplate;
+        }
+        return t;
+      });
       saveDB(db);
-      return NextResponse.json({ success: true });
+      return NextResponse.json({ success: true, item: updatedTemplate, templates: db.templates });
     }
 
     if (action === 'delete_template') {
@@ -492,11 +506,16 @@ export async function POST(req: Request) {
     if (action === 'update_program') {
       const { id, ...updatedFields } = payload;
       if (!db.programs) db.programs = [];
-      db.programs = db.programs.map(p =>
-        p.id === id ? { ...p, ...updatedFields } : p
-      );
+      let updatedProg = null;
+      db.programs = db.programs.map(p => {
+        if (p.id === id) {
+          updatedProg = { ...p, ...updatedFields };
+          return updatedProg;
+        }
+        return p;
+      });
       saveDB(db);
-      return NextResponse.json({ success: true });
+      return NextResponse.json({ success: true, item: updatedProg, programs: db.programs });
     }
 
     if (action === 'delete_program') {
@@ -504,7 +523,7 @@ export async function POST(req: Request) {
       if (!db.programs) db.programs = [];
       db.programs = db.programs.filter(p => p.id !== id);
       saveDB(db);
-      return NextResponse.json({ success: true });
+      return NextResponse.json({ success: true, programs: db.programs });
     }
 
     if (action === 'update_program_month') {
@@ -520,7 +539,7 @@ export async function POST(req: Request) {
         return p;
       });
       saveDB(db);
-      return NextResponse.json({ success: true });
+      return NextResponse.json({ success: true, programs: db.programs });
     }
 
     // ==========================================
@@ -538,17 +557,22 @@ export async function POST(req: Request) {
       if (!db.tbmRecords) db.tbmRecords = [];
       db.tbmRecords.unshift(newTBM);
       saveDB(db);
-      return NextResponse.json({ success: true, item: newTBM });
+      return NextResponse.json({ success: true, item: newTBM, tbmRecords: db.tbmRecords });
     }
 
     if (action === 'update_tbm') {
       const { id, ...updatedFields } = payload;
       if (!db.tbmRecords) db.tbmRecords = [];
-      db.tbmRecords = db.tbmRecords.map((t: any) =>
-        t.id === id ? { ...t, ...updatedFields } : t
-      );
+      let updatedTBM = null;
+      db.tbmRecords = db.tbmRecords.map((t: any) => {
+        if (t.id === id) {
+          updatedTBM = { ...t, ...updatedFields };
+          return updatedTBM;
+        }
+        return t;
+      });
       saveDB(db);
-      return NextResponse.json({ success: true });
+      return NextResponse.json({ success: true, item: updatedTBM, tbmRecords: db.tbmRecords });
     }
 
     if (action === 'delete_tbm') {
@@ -556,7 +580,7 @@ export async function POST(req: Request) {
       if (!db.tbmRecords) db.tbmRecords = [];
       db.tbmRecords = db.tbmRecords.filter((t: any) => t.id !== id);
       saveDB(db);
-      return NextResponse.json({ success: true });
+      return NextResponse.json({ success: true, tbmRecords: db.tbmRecords });
     }
 
     // ==========================================
@@ -571,17 +595,22 @@ export async function POST(req: Request) {
       if (!db.safetyLogs) db.safetyLogs = [];
       db.safetyLogs.unshift(newLog);
       saveDB(db);
-      return NextResponse.json({ success: true, item: newLog });
+      return NextResponse.json({ success: true, item: newLog, safetyLogs: db.safetyLogs });
     }
 
     if (action === 'update_safety_log') {
       const { id, ...updatedFields } = payload;
       if (!db.safetyLogs) db.safetyLogs = [];
-      db.safetyLogs = db.safetyLogs.map((l: any) =>
-        l.id === id ? { ...l, ...updatedFields } : l
-      );
+      let updatedLog = null;
+      db.safetyLogs = db.safetyLogs.map((l: any) => {
+        if (l.id === id) {
+          updatedLog = { ...l, ...updatedFields };
+          return updatedLog;
+        }
+        return l;
+      });
       saveDB(db);
-      return NextResponse.json({ success: true });
+      return NextResponse.json({ success: true, item: updatedLog, safetyLogs: db.safetyLogs });
     }
 
     if (action === 'delete_safety_log') {
@@ -589,7 +618,7 @@ export async function POST(req: Request) {
       if (!db.safetyLogs) db.safetyLogs = [];
       db.safetyLogs = db.safetyLogs.filter((l: any) => l.id !== id);
       saveDB(db);
-      return NextResponse.json({ success: true });
+      return NextResponse.json({ success: true, safetyLogs: db.safetyLogs });
     }
 
     // ==========================================
@@ -603,17 +632,22 @@ export async function POST(req: Request) {
       if (!db.calendarEvents) db.calendarEvents = [];
       db.calendarEvents.unshift(newEvent);
       saveDB(db);
-      return NextResponse.json({ success: true, item: newEvent });
+      return NextResponse.json({ success: true, item: newEvent, calendarEvents: db.calendarEvents });
     }
 
     if (action === 'update_calendar_event') {
       const { id, ...updatedFields } = payload;
       if (!db.calendarEvents) db.calendarEvents = [];
-      db.calendarEvents = db.calendarEvents.map((e: any) =>
-        e.id === id ? { ...e, ...updatedFields } : e
-      );
+      let updatedEvent = null;
+      db.calendarEvents = db.calendarEvents.map((e: any) => {
+        if (e.id === id) {
+          updatedEvent = { ...e, ...updatedFields };
+          return updatedEvent;
+        }
+        return e;
+      });
       saveDB(db);
-      return NextResponse.json({ success: true });
+      return NextResponse.json({ success: true, item: updatedEvent, calendarEvents: db.calendarEvents });
     }
 
     if (action === 'delete_calendar_event') {
@@ -621,7 +655,7 @@ export async function POST(req: Request) {
       if (!db.calendarEvents) db.calendarEvents = [];
       db.calendarEvents = db.calendarEvents.filter((e: any) => e.id !== id);
       saveDB(db);
-      return NextResponse.json({ success: true });
+      return NextResponse.json({ success: true, calendarEvents: db.calendarEvents });
     }
 
     // ==========================================
