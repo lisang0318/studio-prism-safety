@@ -717,6 +717,18 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: true });
     }
 
+    // ==========================================
+    // 11. SITE SETTINGS (QR Guides & Notices)
+    // ==========================================
+    if (action === 'update_site_settings') {
+      db.siteSettings = {
+        ...db.siteSettings,
+        ...payload
+      };
+      saveDB(db);
+      return NextResponse.json({ success: true, siteSettings: db.siteSettings });
+    }
+
     return NextResponse.json({ success: false, error: 'Unknown action' }, { status: 400 });
   } catch (error) {
     console.error('API Error:', error);

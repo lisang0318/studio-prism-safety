@@ -30,6 +30,14 @@ export interface DBStructure {
   calendarEvents: any[];
   orgData: any;
   teamAccounts?: UserAccount[];
+  siteSettings?: {
+    permitQrTitle?: string;
+    permitQrText?: string;
+    workerNoticeTitle?: string;
+    workerNoticeSub?: string;
+    workerNoticeBody?: string;
+    [key: string]: any;
+  };
 }
 
 const DEFAULT_ORG_DATA = {
@@ -54,6 +62,14 @@ const DEFAULT_ORG_DATA = {
   ]
 };
 
+export const DEFAULT_SITE_SETTINGS = {
+  permitQrTitle: '접근 및 작업 허가 QR',
+  permitQrText: '본 사업장은 안전작업 허가제 시행 구역입니다.\n작업 전 반드시 QR코드를 스캔하여 허가서를 제출하고 승인을 받은 후 작업을 시작해 주시기 바랍니다.',
+  workerNoticeTitle: '근로자 의견·제보',
+  workerNoticeSub: '안전·보건 관련 의견을 남겨 주세요',
+  workerNoticeBody: '산업안전보건법에 따라 근로자의 의견을 청취하고 있습니다. 안전·보건과 관련된 제보, 개선 의견, 문의를 남겨 주세요.\n\n• 제보자 성명 및 연락처는 신속한 현장 확인 및 조치 안내를 위해 필수 작성 항목입니다.\n• 제출된 내용은 이상욱 안전관리 책임자에게 실시간 전달됩니다.\n• 긴급한 위험 상황은 즉시 관리감독자에게 직접 알려 주시기 바랍니다.'
+};
+
 export function getDB(): DBStructure {
   try {
     if (!fs.existsSync(DB_DIR)) {
@@ -73,7 +89,8 @@ export function getDB(): DBStructure {
         meetingRecords: [],
         calendarEvents: [],
         orgData: DEFAULT_ORG_DATA,
-        teamAccounts: INITIAL_ACCOUNTS as UserAccount[]
+        teamAccounts: INITIAL_ACCOUNTS as UserAccount[],
+        siteSettings: DEFAULT_SITE_SETTINGS
       };
       fs.writeFileSync(DB_FILE, JSON.stringify(initialDB, null, 2), 'utf8');
       return initialDB;
@@ -143,6 +160,9 @@ export function getDB(): DBStructure {
     if (!parsed.teamAccounts || parsed.teamAccounts.length === 0) {
       parsed.teamAccounts = INITIAL_ACCOUNTS as UserAccount[];
     }
+    if (!parsed.siteSettings) {
+      parsed.siteSettings = DEFAULT_SITE_SETTINGS;
+    }
     return parsed;
   } catch (error) {
     console.error('Error reading safety_db.json:', error);
@@ -159,7 +179,8 @@ export function getDB(): DBStructure {
       meetingRecords: [],
       calendarEvents: [],
       orgData: DEFAULT_ORG_DATA,
-      teamAccounts: INITIAL_ACCOUNTS as UserAccount[]
+      teamAccounts: INITIAL_ACCOUNTS as UserAccount[],
+      siteSettings: DEFAULT_SITE_SETTINGS
     };
   }
 }

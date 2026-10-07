@@ -50,7 +50,9 @@ function WorkPermitsContent() {
     updateTemplate,
     deleteTemplate,
     serverIp,
-    tunnelUrl
+    tunnelUrl,
+    siteSettings,
+    updateSiteSettings
   } = useSafety();
 
   const [activeTab, setActiveTab] = useState<'templates' | 'submissions'>('templates');
@@ -67,11 +69,50 @@ function WorkPermitsContent() {
   const [selectedPermitForPdf, setSelectedPermitForPdf] = useState<WorkPermit | null>(null);
   const [qrMode, setQrMode] = useState<'tunnel' | 'ip' | 'local'>('tunnel');
 
-  // Guide text in right card
+  // Guide text in right card (with full central and local persistence)
   const [guideTitle, setGuideTitle] = useState('접근 및 작업 허가 QR');
   const [guideText, setGuideText] = useState(
     '본 사업장은 안전작업 허가제 시행 구역입니다.\n작업 전 반드시 QR코드를 스캔하여 허가서를 제출하고 승인을 받은 후 작업을 시작해 주시기 바랍니다.'
   );
+
+  // Sync guide text from localStorage and central siteSettings
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('PRISM_PERMIT_QR_GUIDE');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.guideTitle) setGuideTitle(parsed.guideTitle);
+        if (parsed.guideText) setGuideText(parsed.guideText);
+      }
+    } catch (e) {}
+  }, []);
+
+  useEffect(() => {
+    if (siteSettings) {
+      if (siteSettings.permitQrTitle) setGuideTitle(siteSettings.permitQrTitle);
+      if (siteSettings.permitQrText) setGuideText(siteSettings.permitQrText);
+    }
+  }, [siteSettings]);
+
+  const handleSaveGuide = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const cleanTitle = guideTitle.trim() || '접근 및 작업 허가 QR';
+    const cleanText = guideText.trim();
+    setGuideTitle(cleanTitle);
+    setGuideText(cleanText);
+
+    try {
+      localStorage.setItem('PRISM_PERMIT_QR_GUIDE', JSON.stringify({ guideTitle: cleanTitle, guideText: cleanText }));
+    } catch (err) {}
+
+    updateSiteSettings({
+      permitQrTitle: cleanTitle,
+      permitQrText: cleanText
+    });
+
+    setShowEditGuideModal(false);
+    alert('QR 안내 문구가 안전관리 시스템에 성공적으로 저장되었습니다.');
+  };
 
   // New Template Form State
   const [newTemplateForm, setNewTemplateForm] = useState({
@@ -801,9 +842,16 @@ function WorkPermitsContent() {
                 <button
                   type="button"
                   onClick={() => setShowEditGuideModal(false)}
-                  className="px-5 py-2 rounded-xl bg-[#FF4B3E] hover:bg-[#FF3823] text-white font-black"
+                  className="px-4 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold"
                 >
-                  적용 완료
+                  취소
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleSaveGuide()}
+                  className="px-5 py-2 rounded-xl bg-[#FF4B3E] hover:bg-[#FF3823] text-white font-black shadow-md shadow-[#FF4B3E]/30"
+                >
+                  적용 완료 및 저장
                 </button>
               </div>
             </div>

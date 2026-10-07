@@ -35,7 +35,17 @@ import SignaturePad from '@/components/common/SignaturePad';
 
 function WorkerFeedbackContent() {
   const searchParams = useSearchParams();
-  const { workerOpinions, updateOpinionStatus, resolveWorkerOpinion, deleteWorkerOpinion, serverIp, tunnelUrl, refreshData } = useSafety();
+  const {
+    workerOpinions,
+    updateOpinionStatus,
+    resolveWorkerOpinion,
+    deleteWorkerOpinion,
+    serverIp,
+    tunnelUrl,
+    refreshData,
+    siteSettings,
+    updateSiteSettings
+  } = useSafety();
 
   const [activeTab, setActiveTab] = useState<'qr' | 'list'>('qr');
   const [searchTerm, setSearchTerm] = useState('');
@@ -47,12 +57,59 @@ function WorkerFeedbackContent() {
   const [showEditNoticeModal, setShowEditNoticeModal] = useState(false);
   const [qrMode, setQrMode] = useState<'tunnel' | 'ip' | 'local'>('tunnel');
 
-  // Custom notice text in preview
+  // Custom notice text in preview (with full persistence)
   const [noticeTitle, setNoticeTitle] = useState('근로자 의견·제보');
   const [noticeSub, setNoticeSub] = useState('안전·보건 관련 의견을 남겨 주세요');
   const [noticeBody, setNoticeBody] = useState(
     '산업안전보건법에 따라 근로자의 의견을 청취하고 있습니다. 안전·보건과 관련된 제보, 개선 의견, 문의를 남겨 주세요.\n\n• 제보자 성명 및 연락처는 신속한 현장 확인 및 조치 안내를 위해 필수 작성 항목입니다.\n• 제출된 내용은 이상욱 안전관리 책임자에게 실시간 전달됩니다.\n• 긴급한 위험 상황은 즉시 관리감독자에게 직접 알려 주시기 바랍니다.'
   );
+
+  // Sync notice text from localStorage and central siteSettings
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('PRISM_WORKER_NOTICE');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.noticeTitle) setNoticeTitle(parsed.noticeTitle);
+        if (parsed.noticeSub) setNoticeSub(parsed.noticeSub);
+        if (parsed.noticeBody) setNoticeBody(parsed.noticeBody);
+      }
+    } catch (e) {}
+  }, []);
+
+  useEffect(() => {
+    if (siteSettings) {
+      if (siteSettings.workerNoticeTitle) setNoticeTitle(siteSettings.workerNoticeTitle);
+      if (siteSettings.workerNoticeSub) setNoticeSub(siteSettings.workerNoticeSub);
+      if (siteSettings.workerNoticeBody) setNoticeBody(siteSettings.workerNoticeBody);
+    }
+  }, [siteSettings]);
+
+  const handleSaveNotice = () => {
+    const cleanTitle = noticeTitle.trim() || '근로자 의견·제보';
+    const cleanSub = noticeSub.trim();
+    const cleanBody = noticeBody.trim();
+    setNoticeTitle(cleanTitle);
+    setNoticeSub(cleanSub);
+    setNoticeBody(cleanBody);
+
+    try {
+      localStorage.setItem('PRISM_WORKER_NOTICE', JSON.stringify({
+        noticeTitle: cleanTitle,
+        noticeSub: cleanSub,
+        noticeBody: cleanBody
+      }));
+    } catch (e) {}
+
+    updateSiteSettings({
+      workerNoticeTitle: cleanTitle,
+      workerNoticeSub: cleanSub,
+      workerNoticeBody: cleanBody
+    });
+
+    setShowEditNoticeModal(false);
+    alert('모바일 안내 문구가 성공적으로 저장되었습니다.');
+  };
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -803,15 +860,22 @@ function WorkerFeedbackContent() {
               </div>
             </div>
 
-            <button
-              onClick={() => {
-                setShowEditNoticeModal(false);
-                alert('모바일 안내 문구가 성공적으로 업데이트되었습니다.');
-              }}
-              className="w-full py-2.5 bg-[#FF4B3E] hover:bg-[#FF3823] text-white font-black text-xs rounded-xl shadow transition"
-            >
-              저장 완료
-            </button>
+            <div className="flex gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowEditNoticeModal(false)}
+                className="flex-1 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-xs rounded-xl transition"
+              >
+                취소
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveNotice}
+                className="flex-2 py-2.5 bg-[#FF4B3E] hover:bg-[#FF3823] text-white font-black text-xs rounded-xl shadow-md shadow-[#FF4B3E]/30 transition"
+              >
+                저장 완료
+              </button>
+            </div>
           </div>
         </div>
       )}

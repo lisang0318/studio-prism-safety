@@ -85,8 +85,12 @@ interface SafetyContextType {
   calendarEvents: CalendarEvent[];
   meetingRecords: MeetingRecord[];
   orgData: any;
+  siteSettings: any;
   serverIp: string;
   tunnelUrl: string | null;
+  
+  // Site Settings Actions
+  updateSiteSettings: (settings: any) => Promise<void>;
   
   // Program Actions
   addProgram: (program: Omit<ProgramItem, 'id' | 'monthlyPermits'>) => void;
@@ -163,6 +167,7 @@ export function SafetyProvider({ children }: { children: React.ReactNode }) {
   const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
   const [meetingRecords, setMeetingRecords] = useState<MeetingRecord[]>([]);
   const [orgData, setOrgData] = useState<any>(null);
+  const [siteSettings, setSiteSettings] = useState<any>(null);
   const [serverIp, setServerIp] = useState('10.210.115.120');
   const [tunnelUrl, setTunnelUrl] = useState<string | null>(null);
 
@@ -186,6 +191,13 @@ export function SafetyProvider({ children }: { children: React.ReactNode }) {
         const parsedOrg = JSON.parse(savedOrg);
         if (parsedOrg) {
           setOrgData(parsedOrg);
+        }
+      }
+      const savedSettings = localStorage.getItem('PRISM_SITE_SETTINGS');
+      if (savedSettings) {
+        const parsedSettings = JSON.parse(savedSettings);
+        if (parsedSettings) {
+          setSiteSettings(parsedSettings);
         }
       }
     } catch (e) {}
@@ -238,6 +250,14 @@ export function SafetyProvider({ children }: { children: React.ReactNode }) {
           setOrgData(data.orgData);
           try {
             localStorage.setItem('PRISM_ORG_DATA', JSON.stringify(data.orgData));
+          } catch (e) {}
+        }
+
+        // Central Site Settings (QR Guides & Notices) sync
+        if (data.siteSettings) {
+          setSiteSettings(data.siteSettings);
+          try {
+            localStorage.setItem('PRISM_SITE_SETTINGS', JSON.stringify(data.siteSettings));
           } catch (e) {}
         }
       }
@@ -890,6 +910,35 @@ export function SafetyProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const updateSiteSettings = async (settings: any) => {
+    lastMutationTimeRef.current = Date.now();
+    setSiteSettings((prev: any) => {
+      const updated = { ...prev, ...settings };
+      try {
+        localStorage.setItem('PRISM_SITE_SETTINGS', JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
+    try {
+      const res = await fetch('/api/safety-data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'update_site_settings', payload: settings })
+      });
+      if (res.ok) {
+        const json = await res.json();
+        if (json.siteSettings) {
+          setSiteSettings(json.siteSettings);
+          try {
+            localStorage.setItem('PRISM_SITE_SETTINGS', JSON.stringify(json.siteSettings));
+          } catch (e) {}
+        }
+      }
+    } catch (e) {
+      console.error('Update site settings API error:', e);
+    }
+  };
+
   // Inspection, TBM, Incident, Contractor
   const addSafetyInspection = async (inspectionData: Omit<SafetyInspection, 'id' | 'inspectionNumber' | 'createdAt'>) => {
     lastMutationTimeRef.current = Date.now();
@@ -1040,8 +1089,10 @@ export function SafetyProvider({ children }: { children: React.ReactNode }) {
         calendarEvents,
         meetingRecords,
         orgData,
+        siteSettings,
         serverIp,
         tunnelUrl,
+        updateSiteSettings,
         addProgram,
         updateProgram,
         deleteProgram,
