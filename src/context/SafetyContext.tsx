@@ -223,42 +223,73 @@ export function SafetyProvider({ children }: { children: React.ReactNode }) {
           return;
         }
         const data = await res.json();
-        if (data.workPermits) setWorkPermits(data.workPermits);
-        if (data.workerOpinions) setWorkerOpinions(data.workerOpinions);
-        if (data.inspections) setInspections(data.inspections);
-        if (data.contractors) setContractors(data.contractors);
-        if (data.tbmRecords) setTbmRecords(data.tbmRecords);
-        if (data.incidents) setIncidents(data.incidents);
-        if (data.programs) setPrograms(data.programs);
-        if (data.safetyLogs) setSafetyLogs(data.safetyLogs);
-        if (data.calendarEvents) setCalendarEvents(data.calendarEvents);
-        if (data.meetingRecords) setMeetingRecords(data.meetingRecords);
+        if (data.workPermits) {
+          setWorkPermits(prev => JSON.stringify(prev) === JSON.stringify(data.workPermits) ? prev : data.workPermits);
+        }
+        if (data.workerOpinions) {
+          setWorkerOpinions(prev => JSON.stringify(prev) === JSON.stringify(data.workerOpinions) ? prev : data.workerOpinions);
+        }
+        if (data.inspections) {
+          setInspections(prev => JSON.stringify(prev) === JSON.stringify(data.inspections) ? prev : data.inspections);
+        }
+        if (data.contractors) {
+          setContractors(prev => JSON.stringify(prev) === JSON.stringify(data.contractors) ? prev : data.contractors);
+        }
+        if (data.tbmRecords) {
+          setTbmRecords(prev => JSON.stringify(prev) === JSON.stringify(data.tbmRecords) ? prev : data.tbmRecords);
+        }
+        if (data.incidents) {
+          setIncidents(prev => JSON.stringify(prev) === JSON.stringify(data.incidents) ? prev : data.incidents);
+        }
+        if (data.programs) {
+          setPrograms(prev => JSON.stringify(prev) === JSON.stringify(data.programs) ? prev : data.programs);
+        }
+        if (data.safetyLogs) {
+          setSafetyLogs(prev => JSON.stringify(prev) === JSON.stringify(data.safetyLogs) ? prev : data.safetyLogs);
+        }
+        if (data.calendarEvents) {
+          setCalendarEvents(prev => JSON.stringify(prev) === JSON.stringify(data.calendarEvents) ? prev : data.calendarEvents);
+        }
+        if (data.meetingRecords) {
+          setMeetingRecords(prev => JSON.stringify(prev) === JSON.stringify(data.meetingRecords) ? prev : data.meetingRecords);
+        }
 
         // Smart templates sync (strictly deduplicated, single central source of truth)
         if (data.templates && Array.isArray(data.templates) && data.templates.length > 0) {
           try {
             const uniqueTemplates = deduplicateTemplates(data.templates);
-            setTemplates(uniqueTemplates);
-            localStorage.setItem('PRISM_TEMPLATES', JSON.stringify(uniqueTemplates));
+            setTemplates(prev => {
+              if (JSON.stringify(prev) === JSON.stringify(uniqueTemplates)) return prev;
+              try {
+                localStorage.setItem('PRISM_TEMPLATES', JSON.stringify(uniqueTemplates));
+              } catch (e) {}
+              return uniqueTemplates;
+            });
           } catch (e) {
-            setTemplates(data.templates);
+            setTemplates(prev => JSON.stringify(prev) === JSON.stringify(data.templates) ? prev : data.templates);
           }
         }
 
         // Central OrgData sync
         if (data.orgData) {
-          setOrgData(data.orgData);
-          try {
-            localStorage.setItem('PRISM_ORG_DATA', JSON.stringify(data.orgData));
-          } catch (e) {}
+          setOrgData((prev: any) => {
+            if (JSON.stringify(prev) === JSON.stringify(data.orgData)) return prev;
+            try {
+              localStorage.setItem('PRISM_ORG_DATA', JSON.stringify(data.orgData));
+            } catch (e) {}
+            return data.orgData;
+          });
         }
 
         // Central Site Settings (QR Guides & Notices) sync
         if (data.siteSettings) {
-          setSiteSettings(data.siteSettings);
-          try {
-            localStorage.setItem('PRISM_SITE_SETTINGS', JSON.stringify(data.siteSettings));
-          } catch (e) {}
+          setSiteSettings((prev: any) => {
+            if (JSON.stringify(prev) === JSON.stringify(data.siteSettings)) return prev;
+            try {
+              localStorage.setItem('PRISM_SITE_SETTINGS', JSON.stringify(data.siteSettings));
+            } catch (e) {}
+            return data.siteSettings;
+          });
         }
       }
     } catch (e) {

@@ -81,6 +81,42 @@ export default function OrganizationPage() {
   const [showSupervisorModal, setShowSupervisorModal] = useState(false);
   const [editingSupervisor, setEditingSupervisor] = useState<Supervisor | null>(null);
 
+  // Dedicated Form States for Modals to prevent polling overwrite
+  const [formCsoRole, setFormCsoRole] = useState('안전보건총괄책임자');
+  const [formCsoTitle, setFormCsoTitle] = useState('대표이사');
+  const [formCsoName, setFormCsoName] = useState('공희철');
+
+  const [formCommitteeTitle, setFormCommitteeTitle] = useState('산업안전보건위원회');
+  const [formCommitteeSub, setFormCommitteeSub] = useState('법정 심의·의결 기구');
+  const [formUserMemberCount, setFormUserMemberCount] = useState<number | string>(0);
+  const [formWorkerMemberCount, setFormWorkerMemberCount] = useState<number | string>(0);
+
+  const [formSafetyTeamTitle, setFormSafetyTeamTitle] = useState('안전보건팀');
+  const [formSafetyLeaderName, setFormSafetyLeaderName] = useState('이상욱');
+  const [formSafetyLeaderPhone, setFormSafetyLeaderPhone] = useState('010-6670-3534');
+
+  const handleOpenEditCso = () => {
+    setFormCsoRole(csoRole);
+    setFormCsoTitle(csoTitle);
+    setFormCsoName(csoName);
+    setShowEditCsoModal(true);
+  };
+
+  const handleOpenEditCommittee = () => {
+    setFormCommitteeTitle(committeeTitle);
+    setFormCommitteeSub(committeeSub);
+    setFormUserMemberCount(userMemberCount);
+    setFormWorkerMemberCount(workerMemberCount);
+    setShowEditCommitteeModal(true);
+  };
+
+  const handleOpenEditTeam = () => {
+    setFormSafetyTeamTitle(safetyTeamTitle);
+    setFormSafetyLeaderName(safetyLeaderName);
+    setFormSafetyLeaderPhone(safetyLeaderPhone);
+    setShowEditTeamModal(true);
+  };
+
   const [spCpName, setSpCpName] = useState('');
   const [spName, setSpName] = useState('');
   const [spPosition, setSpPosition] = useState('');
@@ -138,9 +174,10 @@ export default function OrganizationPage() {
     } catch (e) {}
   }, []);
 
-  // Sync Org Data from central Server / Context
+  // Sync Org Data from central Server / Context (only when not editing in a modal)
   useEffect(() => {
-    if (orgData) {
+    const isEditingOrg = showEditCsoModal || showEditTeamModal || showEditCommitteeModal || showSupervisorModal;
+    if (orgData && !isEditingOrg) {
       if (orgData.csoRole) setCsoRole(orgData.csoRole);
       if (orgData.csoTitle) setCsoTitle(orgData.csoTitle);
       if (orgData.csoName) setCsoName(orgData.csoName);
@@ -157,7 +194,7 @@ export default function OrganizationPage() {
       if (orgData.userMemberCount !== undefined) setUserMemberCount(orgData.userMemberCount);
       if (orgData.workerMemberCount !== undefined) setWorkerMemberCount(orgData.workerMemberCount);
     }
-  }, [orgData]);
+  }, [orgData, showEditCsoModal, showEditTeamModal, showEditCommitteeModal, showSupervisorModal]);
 
   const saveStateToStorage = (updatedSupervisors = supervisors) => {
     const fullOrg = {
@@ -183,9 +220,9 @@ export default function OrganizationPage() {
 
   const handleSaveCso = (e: React.FormEvent) => {
     e.preventDefault();
-    const updatedRole = csoRole.trim() || '안전보건총괄책임자';
-    const updatedTitle = csoTitle.trim() || '대표이사';
-    const updatedName = csoName.trim() || '공희철';
+    const updatedRole = formCsoRole.trim() || '안전보건총괄책임자';
+    const updatedTitle = formCsoTitle.trim() || '대표이사';
+    const updatedName = formCsoName.trim() || '공희철';
     setCsoRole(updatedRole);
     setCsoTitle(updatedTitle);
     setCsoName(updatedName);
@@ -215,10 +252,10 @@ export default function OrganizationPage() {
 
   const handleSaveCommittee = (e: React.FormEvent) => {
     e.preventDefault();
-    const parsedUserCount = Number(userMemberCount) >= 0 ? Number(userMemberCount) : 0;
-    const parsedWorkerCount = Number(workerMemberCount) >= 0 ? Number(workerMemberCount) : 0;
-    const updatedTitle = committeeTitle.trim() || '산업안전보건위원회';
-    const updatedSub = committeeSub.trim() || '법정 심의·의결 기구';
+    const parsedUserCount = Number(formUserMemberCount) >= 0 ? Number(formUserMemberCount) : 0;
+    const parsedWorkerCount = Number(formWorkerMemberCount) >= 0 ? Number(formWorkerMemberCount) : 0;
+    const updatedTitle = formCommitteeTitle.trim() || '산업안전보건위원회';
+    const updatedSub = formCommitteeSub.trim() || '법정 심의·의결 기구';
 
     setUserMemberCount(parsedUserCount);
     setWorkerMemberCount(parsedWorkerCount);
@@ -250,9 +287,9 @@ export default function OrganizationPage() {
 
   const handleSaveTeam = (e: React.FormEvent) => {
     e.preventDefault();
-    const updatedTitle = safetyTeamTitle.trim() || '안전보건팀';
-    const updatedLeader = safetyLeaderName.trim() || '이상욱';
-    const updatedPhone = safetyLeaderPhone.trim() || '010-6670-3534';
+    const updatedTitle = formSafetyTeamTitle.trim() || '안전보건팀';
+    const updatedLeader = formSafetyLeaderName.trim() || '이상욱';
+    const updatedPhone = formSafetyLeaderPhone.trim() || '010-6670-3534';
     setSafetyTeamTitle(updatedTitle);
     setSafetyLeaderName(updatedLeader);
     setSafetyLeaderPhone(updatedPhone);
@@ -654,7 +691,7 @@ export default function OrganizationPage() {
             <div className="flex flex-col items-center relative z-10">
               <div className="max-w-md w-full p-5 rounded-2xl bg-white border-2 border-[#FF4B3E] shadow-sm text-center relative group hover:border-[#FF3823] transition">
                 <button
-                  onClick={() => setShowEditCsoModal(true)}
+                  onClick={handleOpenEditCso}
                   className="absolute top-3 right-3 p-1.5 rounded-lg bg-slate-100 text-slate-700 hover:text-[#FF4B3E] transition"
                   title="CSO 정보 수정"
                 >
@@ -680,7 +717,7 @@ export default function OrganizationPage() {
               {/* Safety Committee */}
               <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 relative group hover:border-slate-300 transition">
                 <button
-                  onClick={() => setShowEditCommitteeModal(true)}
+                  onClick={handleOpenEditCommittee}
                   className="absolute top-3 right-3 p-1.5 rounded-lg bg-white text-slate-700 hover:text-[#FF4B3E] border border-slate-200 transition"
                   title="위원회 정보 수정"
                 >
@@ -704,7 +741,7 @@ export default function OrganizationPage() {
               {/* Safety Team */}
               <div className="p-5 rounded-2xl bg-slate-50 border border-emerald-200 relative group hover:border-emerald-300 transition">
                 <button
-                  onClick={() => setShowEditTeamModal(true)}
+                  onClick={handleOpenEditTeam}
                   className="absolute top-3 right-3 p-1.5 rounded-lg bg-white text-slate-700 hover:text-emerald-700 border border-slate-200 transition"
                   title="안전팀 정보 수정"
                 >
@@ -1186,8 +1223,8 @@ export default function OrganizationPage() {
                 <label className="block font-black text-slate-900 mb-1">직책 역할</label>
                 <input
                   type="text"
-                  value={csoRole}
-                  onChange={e => setCsoRole(e.target.value)}
+                  value={formCsoRole}
+                  onChange={e => setFormCsoRole(e.target.value)}
                   className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 text-slate-900 font-black"
                 />
               </div>
@@ -1195,8 +1232,8 @@ export default function OrganizationPage() {
                 <label className="block font-black text-slate-900 mb-1">직함</label>
                 <input
                   type="text"
-                  value={csoTitle}
-                  onChange={e => setCsoTitle(e.target.value)}
+                  value={formCsoTitle}
+                  onChange={e => setFormCsoTitle(e.target.value)}
                   className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 text-slate-900 font-bold"
                 />
               </div>
@@ -1204,8 +1241,8 @@ export default function OrganizationPage() {
                 <label className="block font-black text-slate-900 mb-1">성명</label>
                 <input
                   type="text"
-                  value={csoName}
-                  onChange={e => setCsoName(e.target.value)}
+                  value={formCsoName}
+                  onChange={e => setFormCsoName(e.target.value)}
                   className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 text-slate-900 font-black"
                 />
               </div>
@@ -1235,8 +1272,8 @@ export default function OrganizationPage() {
                 <label className="block font-black text-slate-900 mb-1">위원회 명칭</label>
                 <input
                   type="text"
-                  value={committeeTitle}
-                  onChange={e => setCommitteeTitle(e.target.value)}
+                  value={formCommitteeTitle}
+                  onChange={e => setFormCommitteeTitle(e.target.value)}
                   className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 text-slate-900 font-black"
                 />
               </div>
@@ -1247,8 +1284,8 @@ export default function OrganizationPage() {
                     type="number"
                     min="0"
                     required
-                    value={userMemberCount}
-                    onChange={e => setUserMemberCount(e.target.value === '' ? ('' as any) : Number(e.target.value))}
+                    value={formUserMemberCount}
+                    onChange={e => setFormUserMemberCount(e.target.value === '' ? ('' as any) : Number(e.target.value))}
                     className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 text-slate-900 font-mono font-bold focus:bg-white focus:border-[#FF4B3E]"
                   />
                 </div>
@@ -1258,8 +1295,8 @@ export default function OrganizationPage() {
                     type="number"
                     min="0"
                     required
-                    value={workerMemberCount}
-                    onChange={e => setWorkerMemberCount(e.target.value === '' ? ('' as any) : Number(e.target.value))}
+                    value={formWorkerMemberCount}
+                    onChange={e => setFormWorkerMemberCount(e.target.value === '' ? ('' as any) : Number(e.target.value))}
                     className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 text-slate-900 font-mono font-bold focus:bg-white focus:border-[#FF4B3E]"
                   />
                 </div>
@@ -1290,8 +1327,8 @@ export default function OrganizationPage() {
                 <label className="block font-black text-slate-900 mb-1">조직 명칭</label>
                 <input
                   type="text"
-                  value={safetyTeamTitle}
-                  onChange={e => setSafetyTeamTitle(e.target.value)}
+                  value={formSafetyTeamTitle}
+                  onChange={e => setFormSafetyTeamTitle(e.target.value)}
                   className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 text-slate-900 font-black"
                 />
               </div>
@@ -1299,8 +1336,8 @@ export default function OrganizationPage() {
                 <label className="block font-black text-slate-900 mb-1">안전관리자 성명</label>
                 <input
                   type="text"
-                  value={safetyLeaderName}
-                  onChange={e => setSafetyLeaderName(e.target.value)}
+                  value={formSafetyLeaderName}
+                  onChange={e => setFormSafetyLeaderName(e.target.value)}
                   className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 text-slate-900 font-black"
                 />
               </div>
@@ -1308,8 +1345,8 @@ export default function OrganizationPage() {
                 <label className="block font-black text-slate-900 mb-1">직통 연락처</label>
                 <input
                   type="text"
-                  value={safetyLeaderPhone}
-                  onChange={e => setSafetyLeaderPhone(e.target.value)}
+                  value={formSafetyLeaderPhone}
+                  onChange={e => setFormSafetyLeaderPhone(e.target.value)}
                   className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 text-slate-900 font-mono font-bold"
                 />
               </div>

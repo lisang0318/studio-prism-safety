@@ -64,7 +64,19 @@ function WorkerFeedbackContent() {
     '산업안전보건법에 따라 근로자의 의견을 청취하고 있습니다. 안전·보건과 관련된 제보, 개선 의견, 문의를 남겨 주세요.\n\n• 제보자 성명 및 연락처는 신속한 현장 확인 및 조치 안내를 위해 필수 작성 항목입니다.\n• 제출된 내용은 이상욱 안전관리 책임자에게 실시간 전달됩니다.\n• 긴급한 위험 상황은 즉시 관리감독자에게 직접 알려 주시기 바랍니다.'
   );
 
-  // Sync notice text from localStorage and central siteSettings
+  // Modal editing form state (isolated from polling sync)
+  const [formNoticeTitle, setFormNoticeTitle] = useState('근로자 의견·제보');
+  const [formNoticeSub, setFormNoticeSub] = useState('안전·보건 관련 의견을 남겨 주세요');
+  const [formNoticeBody, setFormNoticeBody] = useState('');
+
+  const handleOpenEditNoticeModal = () => {
+    setFormNoticeTitle(noticeTitle);
+    setFormNoticeSub(noticeSub);
+    setFormNoticeBody(noticeBody);
+    setShowEditNoticeModal(true);
+  };
+
+  // Sync notice text from localStorage and central siteSettings (only when modal is NOT open)
   useEffect(() => {
     try {
       const saved = localStorage.getItem('PRISM_WORKER_NOTICE');
@@ -78,17 +90,17 @@ function WorkerFeedbackContent() {
   }, []);
 
   useEffect(() => {
-    if (siteSettings) {
+    if (siteSettings && !showEditNoticeModal) {
       if (siteSettings.workerNoticeTitle) setNoticeTitle(siteSettings.workerNoticeTitle);
       if (siteSettings.workerNoticeSub) setNoticeSub(siteSettings.workerNoticeSub);
       if (siteSettings.workerNoticeBody) setNoticeBody(siteSettings.workerNoticeBody);
     }
-  }, [siteSettings]);
+  }, [siteSettings, showEditNoticeModal]);
 
-  const handleSaveNotice = () => {
-    const cleanTitle = noticeTitle.trim() || '근로자 의견·제보';
-    const cleanSub = noticeSub.trim();
-    const cleanBody = noticeBody.trim();
+  const handleSaveNotice = async () => {
+    const cleanTitle = formNoticeTitle.trim() || '근로자 의견·제보';
+    const cleanSub = formNoticeSub.trim();
+    const cleanBody = formNoticeBody.trim();
     setNoticeTitle(cleanTitle);
     setNoticeSub(cleanSub);
     setNoticeBody(cleanBody);
@@ -101,13 +113,20 @@ function WorkerFeedbackContent() {
       }));
     } catch (e) {}
 
-    updateSiteSettings({
-      workerNoticeTitle: cleanTitle,
-      workerNoticeSub: cleanSub,
-      workerNoticeBody: cleanBody
-    });
-
     setShowEditNoticeModal(false);
+
+    try {
+      if (typeof updateSiteSettings === 'function') {
+        await updateSiteSettings({
+          workerNoticeTitle: cleanTitle,
+          workerNoticeSub: cleanSub,
+          workerNoticeBody: cleanBody
+        });
+      }
+    } catch (err) {
+      console.error('Update site settings error:', err);
+    }
+
     alert('모바일 안내 문구가 성공적으로 저장되었습니다.');
   };
 
@@ -442,7 +461,7 @@ function WorkerFeedbackContent() {
                 모바일 제보 페이지 실시간 미리보기
               </span>
               <button
-                onClick={() => setShowEditNoticeModal(true)}
+                onClick={handleOpenEditNoticeModal}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-bold transition"
               >
                 <Edit3 className="w-3.5 h-3.5 text-[#FF4B3E]" />
@@ -835,8 +854,8 @@ function WorkerFeedbackContent() {
                 <label className="block font-bold text-slate-700 mb-1">상단 제목</label>
                 <input
                   type="text"
-                  value={noticeTitle}
-                  onChange={e => setNoticeTitle(e.target.value)}
+                  value={formNoticeTitle}
+                  onChange={e => setFormNoticeTitle(e.target.value)}
                   className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-900 font-bold"
                 />
               </div>
@@ -844,8 +863,8 @@ function WorkerFeedbackContent() {
                 <label className="block font-bold text-slate-700 mb-1">부제목</label>
                 <input
                   type="text"
-                  value={noticeSub}
-                  onChange={e => setNoticeSub(e.target.value)}
+                  value={formNoticeSub}
+                  onChange={e => setFormNoticeSub(e.target.value)}
                   className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-900"
                 />
               </div>
@@ -853,8 +872,8 @@ function WorkerFeedbackContent() {
                 <label className="block font-bold text-slate-700 mb-1">상세 안내 본문</label>
                 <textarea
                   rows={5}
-                  value={noticeBody}
-                  onChange={e => setNoticeBody(e.target.value)}
+                  value={formNoticeBody}
+                  onChange={e => setFormNoticeBody(e.target.value)}
                   className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-slate-900"
                 />
               </div>

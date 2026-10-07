@@ -75,7 +75,17 @@ function WorkPermitsContent() {
     '본 사업장은 안전작업 허가제 시행 구역입니다.\n작업 전 반드시 QR코드를 스캔하여 허가서를 제출하고 승인을 받은 후 작업을 시작해 주시기 바랍니다.'
   );
 
-  // Sync guide text from localStorage and central siteSettings
+  // Modal editing form state (isolated from polling sync)
+  const [formGuideTitle, setFormGuideTitle] = useState('접근 및 작업 허가 QR');
+  const [formGuideText, setFormGuideText] = useState('');
+
+  const handleOpenEditGuideModal = () => {
+    setFormGuideTitle(guideTitle);
+    setFormGuideText(guideText);
+    setShowEditGuideModal(true);
+  };
+
+  // Sync guide text from localStorage and central siteSettings (only when modal is NOT open)
   useEffect(() => {
     try {
       const saved = localStorage.getItem('PRISM_PERMIT_QR_GUIDE');
@@ -88,16 +98,16 @@ function WorkPermitsContent() {
   }, []);
 
   useEffect(() => {
-    if (siteSettings) {
+    if (siteSettings && !showEditGuideModal) {
       if (siteSettings.permitQrTitle) setGuideTitle(siteSettings.permitQrTitle);
       if (siteSettings.permitQrText) setGuideText(siteSettings.permitQrText);
     }
-  }, [siteSettings]);
+  }, [siteSettings, showEditGuideModal]);
 
-  const handleSaveGuide = (e?: React.FormEvent) => {
+  const handleSaveGuide = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    const cleanTitle = guideTitle.trim() || '접근 및 작업 허가 QR';
-    const cleanText = guideText.trim();
+    const cleanTitle = formGuideTitle.trim() || '접근 및 작업 허가 QR';
+    const cleanText = formGuideText.trim();
     setGuideTitle(cleanTitle);
     setGuideText(cleanText);
 
@@ -105,12 +115,19 @@ function WorkPermitsContent() {
       localStorage.setItem('PRISM_PERMIT_QR_GUIDE', JSON.stringify({ guideTitle: cleanTitle, guideText: cleanText }));
     } catch (err) {}
 
-    updateSiteSettings({
-      permitQrTitle: cleanTitle,
-      permitQrText: cleanText
-    });
-
     setShowEditGuideModal(false);
+
+    try {
+      if (typeof updateSiteSettings === 'function') {
+        await updateSiteSettings({
+          permitQrTitle: cleanTitle,
+          permitQrText: cleanText
+        });
+      }
+    } catch (err) {
+      console.error('Update site settings error:', err);
+    }
+
     alert('QR 안내 문구가 안전관리 시스템에 성공적으로 저장되었습니다.');
   };
 
@@ -537,7 +554,7 @@ function WorkPermitsContent() {
                   <div className="flex items-center justify-between text-xs text-slate-800">
                     <span className="font-bold">외부 작업자 접근 QR</span>
                     <button
-                      onClick={() => setShowEditGuideModal(true)}
+                      onClick={handleOpenEditGuideModal}
                       className="text-slate-800 hover:text-slate-900 flex items-center gap-1 text-[11px]"
                     >
                       <Edit3 className="w-3.5 h-3.5 text-sky-400" />
@@ -593,7 +610,7 @@ function WorkPermitsContent() {
                   <div>
                     <h3 className="text-lg font-black text-slate-900 tracking-tight flex items-center justify-center gap-1.5">
                       <span>{guideTitle}</span>
-                      <button onClick={() => setShowEditGuideModal(true)} className="text-slate-800 hover:text-sky-400">
+                      <button onClick={handleOpenEditGuideModal} className="text-slate-800 hover:text-sky-400">
                         <Edit3 className="w-3.5 h-3.5" />
                       </button>
                     </h3>
@@ -822,8 +839,8 @@ function WorkPermitsContent() {
                 <label className="block font-bold text-slate-700 mb-1">제목</label>
                 <input
                   type="text"
-                  value={guideTitle}
-                  onChange={e => setGuideTitle(e.target.value)}
+                  value={formGuideTitle}
+                  onChange={e => setFormGuideTitle(e.target.value)}
                   className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-900"
                 />
               </div>
@@ -832,8 +849,8 @@ function WorkPermitsContent() {
                 <label className="block font-bold text-slate-700 mb-1">안내 본문 내용</label>
                 <textarea
                   rows={4}
-                  value={guideText}
-                  onChange={e => setGuideText(e.target.value)}
+                  value={formGuideText}
+                  onChange={e => setFormGuideText(e.target.value)}
                   className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-slate-900 leading-relaxed"
                 />
               </div>
